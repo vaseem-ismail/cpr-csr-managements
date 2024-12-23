@@ -48,15 +48,13 @@ def login():
     # Find user by email
     user = users_collection.find_one({"email": email})
     if user:
-        # Compare passwords
-        if user.get("password") == password:
-            # Include all required user details in the response
+        # Verify hashed password
+        if bcrypt.check_password_hash(user["password"], password):
             return jsonify({
                 "message": "Login successful",
                 "name": user["name"],
                 "email": user["email"],
-                "role": user["user"],  # Role (Admin or Student)
-                "password": user["password"]
+                "role": user["role"]
             }), 200
         else:
             return jsonify({"error": "Invalid password"}), 401

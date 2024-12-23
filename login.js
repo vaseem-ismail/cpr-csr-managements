@@ -1,24 +1,24 @@
 async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const message = document.getElementById('message');
-
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const message = document.getElementById("message");
+  
     try {
       const response = await fetch("https://cpr-csr-managements.onrender.com/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         // Store user's details in localStorage
-        localStorage.setItem('userName', data.name);
-        localStorage.setItem('userEmail', data.email);
-        localStorage.setItem('userRole', data.role);
-
-        // Redirect to Home.html
+        localStorage.setItem("userName", data.name);
+        localStorage.setItem("userEmail", data.email);
+        localStorage.setItem("userRole", data.role);
+  
+        // Redirect to home.html
         window.location.href = "home.html";
       } else {
         // Show error message
@@ -29,8 +29,8 @@ async function login() {
       message.textContent = `Error: ${error.message}`;
       message.style.color = "red";
     }
-
-    // Prevent form submission (default behavior)
+  
+    // Prevent form submission
     return false;
   }
   

@@ -49,29 +49,28 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
+    try:
+        data = request.json  # Parse incoming JSON
+        email = data.get('email')
+        password = data.get('password')
 
-    # Extract email and password from request
-    email = data.get('email')
-    password = data.get('password')
+        if not email or not password:
+            return jsonify({'error': 'Email and password are required'}), 400
 
-    if not email or not password:
-        return jsonify({'error': 'Email and password are required'}), 400
+        # Find user by email
+        user = users_collection.find_one({'email': email})
 
-    # Find user by email
-    user = users_collection.find_one({'email': email})
+        if user and user['password'] == password:
+            return jsonify({
+                'message': 'Login successful',
+                'name': user['name'],
+                'role': user['role'],
+                'section': user['section']
+            }), 200
 
-    if user and user['password'] == password:
-        # Return user details
-        return jsonify({
-            'message': 'Login successful',
-            'name': user['name'],
-            'role': user['role'],
-            'section': user['section']
-        }), 200
-
-    return jsonify({'error': 'Invalid email or password'}), 401
-
+        return jsonify({'error': 'Invalid email or password'}), 401
+    except Exception as e:
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 # Password Reset (No Hashing)
 @app.route('/reset-password', methods=['POST'])

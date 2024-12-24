@@ -12,54 +12,66 @@ jwt = JWTManager(app)
 # MongoDB setup (MongoDB Atlas)
 MONGO_URI = "mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/"  # Replace with your MongoDB URI
 mongo_client = MongoClient(MONGO_URI)
-db = mongo_client['sample_mflix']
+db = mongo_client['CPR-']
 users_collection = db['users']
 
 # User Registration (No Hashing)
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
+
+    # Extract data from request
     name = data.get('name')
     email = data.get('email')
     password = data.get('password')
+    section = data.get('section')
+    role = data.get('role')
 
-    if not name or not email or not password:
-        return jsonify({'error': 'Name, email, and password are required'}), 400
+    # Validation checks
+    if not name or not email or not password or not section or not role:
+        return jsonify({'error': 'All fields are required'}), 400
 
     # Check if email already exists
     if users_collection.find_one({'email': email}):
         return jsonify({'error': 'Email already registered'}), 400
 
-    # Insert new user into database with plain text password
-    users_collection.insert_one({'name': name, 'email': email, 'password': password})
+    # Insert user data into the database
+    user_data = {
+        'name': name,
+        'email': email,
+        'password': password,  # Note: Store hashed passwords in production!
+        'section': section,
+        'role': role
+    }
+    users_collection.insert_one(user_data)
 
     return jsonify({'message': 'User registered successfully'}), 201
 
-# User Login (Plain Text Password Comparison)
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
+
+    # Extract email and password from request
     email = data.get('email')
     password = data.get('password')
 
     if not email or not password:
-        return jsonify({"error": "Email and password are required"}), 400
+        return jsonify({'error': 'Email and password are required'}), 400
 
     # Find user by email
-    user = users_collection.find_one({"email": email})
-    if user:
-        # Compare plain text password
-        if user['password'] == password:
-            return jsonify({
-                "message": "Login successful",
-                "name": user["name"],
-                "email": user["email"],
-                "role": user["role"],  # Add a role field if needed
-            }), 200
-        else:
-            return jsonify({"error": "Invalid password"}), 401
-    else:
-        return jsonify({"error": "User not found"}), 404
+    user = users_collection.find_one({'email': email})
+
+    if user and user['password'] == password:
+        # Return user details
+        return jsonify({
+            'message': 'Login successful',
+            'name': user['name'],
+            'role': user['role'],
+            'section': user['section']
+        }), 200
+
+    return jsonify({'error': 'Invalid email or password'}), 401
+
 
 # Password Reset (No Hashing)
 @app.route('/reset-password', methods=['POST'])

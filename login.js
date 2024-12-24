@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
           message.textContent = data.error || "Login failed!";
           message.style.color = "red";
         }
+   
       } catch (error) {
         message.textContent = `Error: ${error.message}`;
         message.style.color = "red";

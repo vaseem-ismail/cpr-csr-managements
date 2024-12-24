@@ -12,7 +12,7 @@ jwt = JWTManager(app)
 # MongoDB setup (MongoDB Atlas)
 MONGO_URI = "mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/"  # Replace with your MongoDB URI
 mongo_client = MongoClient(MONGO_URI)
-db = mongo_client['CPR-']
+db = mongo_client['CPR-Details']
 users_collection = db['users']
 
 # User Registration (No Hashing)

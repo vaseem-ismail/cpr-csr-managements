@@ -1,14 +1,11 @@
 from flask import Flask, request, jsonify
-from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from flask_jwt_extended import JWTManager, jwt_required
 from pymongo import MongoClient
 from flask_cors import CORS
-import re
 
 # Initialize Flask app and extensions
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes and origins
-bcrypt = Bcrypt(app)
 app.config['JWT_SECRET_KEY'] = '460680e7fe09d19e4063e23c51d3c53757920b054007273cd083703623c1cfea'  # Replace with your actual secret key
 jwt = JWTManager(app)
 
@@ -18,7 +15,7 @@ mongo_client = MongoClient(MONGO_URI)
 db = mongo_client['sample_mflix']
 users_collection = db['users']
 
-# User Registration
+# User Registration (No Hashing)
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -33,15 +30,12 @@ def register():
     if users_collection.find_one({'email': email}):
         return jsonify({'error': 'Email already registered'}), 400
 
-    # Hash the password
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-
-    # Insert new user into database
-    users_collection.insert_one({'name': name, 'email': email, 'password': hashed_password})
+    # Insert new user into database with plain text password
+    users_collection.insert_one({'name': name, 'email': email, 'password': password})
 
     return jsonify({'message': 'User registered successfully'}), 201
 
-# User Login
+# User Login (Plain Text Password Comparison)
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -54,8 +48,8 @@ def login():
     # Find user by email
     user = users_collection.find_one({"email": email})
     if user:
-        # Compare hashed password
-        if bcrypt.check_password_hash(user['password'], password):
+        # Compare plain text password
+        if user['password'] == password:
             return jsonify({
                 "message": "Login successful",
                 "name": user["name"],
@@ -67,7 +61,7 @@ def login():
     else:
         return jsonify({"error": "User not found"}), 404
 
-# Password Reset
+# Password Reset (No Hashing)
 @app.route('/reset-password', methods=['POST'])
 def reset_password():
     data = request.get_json()
@@ -82,11 +76,8 @@ def reset_password():
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    # Hash the new password
-    hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
-
-    # Update the password
-    users_collection.update_one({"email": email}, {"$set": {"password": hashed_password}})
+    # Update the password (no hashing)
+    users_collection.update_one({"email": email}, {"$set": {"password": new_password}})
 
     return jsonify({"message": "Password reset successful"}), 200
 
@@ -107,15 +98,12 @@ def update_password():
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    # Check if old password is correct
-    if not bcrypt.check_password_hash(user['password'], old_password):
+    # Check if old password is correct (plain text comparison)
+    if user['password'] != old_password:
         return jsonify({"error": "Incorrect old password"}), 401
 
-    # Hash the new password
-    hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
-
-    # Update the password
-    users_collection.update_one({"email": email}, {"$set": {"password": hashed_password}})
+    # Update the password (no hashing)
+    users_collection.update_one({"email": email}, {"$set": {"password": new_password}})
 
     return jsonify({"message": "Password updated successfully"}), 200
 

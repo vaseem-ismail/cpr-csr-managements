@@ -6,28 +6,16 @@
   <title>Home</title>
 </head>
 <body>
-  <header>
-    <h1>Welcome, <span id="userName"></span>!</h1>
-    <h2>Your email: <span id="userEmail"></span></h2>
-    <h2>Your role: <span id="userRole"></span></h2>
-    <h2>Your password: <span id="userPassword"></span></h2>
-  </header>
-  <script>
-    // Fetch user's details from localStorage
-    const userName = localStorage.getItem('userName');
-    const userEmail = localStorage.getItem('userEmail');
-    const userRole = localStorage.getItem('userRole');
-    const userPassword = localStorage.getItem('userPassword');
+  <h1>Welcome Home</h1>
+  <p>Name: <span id="name"></span></p>
+  <p>Role: <span id="role"></span></p>
+  <p>Section: <span id="section"></span></p>
 
-    if (userName && userEmail && userRole && userPassword) {
-      document.getElementById('userName').textContent = userName;
-      document.getElementById('userEmail').textContent = userEmail;
-      document.getElementById('userRole').textContent = userRole;
-      document.getElementById('userPassword').textContent = userPassword;
-    } else {
-      // Redirect to login page if no user details are found
-      window.location.href = "index.html";
-    }
+  <script>
+    // Retrieve user details from localStorage
+    document.getElementById("name").textContent = localStorage.getItem("name");
+    document.getElementById("role").textContent = localStorage.getItem("role");
+    document.getElementById("section").textContent = localStorage.getItem("section");
   </script>
 </body>
 </html>

@@ -1,98 +1,40 @@
-const API_BASE = "https://cpr-csr-managements.onrender.com";
+document.getElementById("loginForm").addEventListener("submit", async (event) => {
+    event.preventDefault(); // Prevent default form submission
 
-document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("loginForm");
-  const registerForm = document.getElementById("registerForm");
-  const resetForm = document.getElementById("resetForm");
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const messageElement = document.getElementById("message");
 
-  if (loginForm) {
-    loginForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const message = document.getElementById("message");
-
-      try {
-        const response = await fetch(`${API_BASE}/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+    try {
+        const response = await fetch("https://cpr-csr-managements.onrender.com/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
         });
 
         const data = await response.json();
+
         if (response.ok) {
-          message.textContent = "Login successful!";
-          message.style.color = "green";
-          localStorage.setItem("userEmail", data.email);
-          window.location.href = "home.html"; // Redirect to home page
+            // Store user details in localStorage
+            localStorage.setItem("name", data.name);
+            localStorage.setItem("role", data.role);
+            localStorage.setItem("section", data.section);
+
+            // Redirect to home page
+            window.location.href = "home.html";
         } else {
-          message.textContent = data.error || "Login failed!";
-          message.style.color = "red";
+            // Show error message
+            messageElement.textContent = data.error || "Login failed!";
+            messageElement.style.color = "red";
         }
-   
-      } catch (error) {
-        message.textContent = `Error: ${error.message}`;
-        message.style.color = "red";
-      }
-    });
-  }
-
-  if (registerForm) {
-    registerForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const name = document.getElementById("name").value;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const message = document.getElementById("message");
-
-      try {
-        const response = await fetch(`${API_BASE}/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password }),
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-          message.textContent = data.message || "Registration successful!";
-          message.style.color = "green";
-        } else {
-          message.textContent = data.error || "Registration failed!";
-          message.style.color = "red";
-        }
-      } catch (error) {
-        message.textContent = `Error: ${error.message}`;
-        message.style.color = "red";
-      }
-    });
-  }
-
-  if (resetForm) {
-    resetForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const email = document.getElementById("email").value;
-      const newPassword = document.getElementById("newPassword").value;
-      const message = document.getElementById("message");
-
-      try {
-        const response = await fetch(`${API_BASE}/reset-password`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, new_password: newPassword }),
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-          message.textContent = data.message || "Password reset successful!";
-          message.style.color = "green";
-        } else {
-          message.textContent = data.error || "Password reset failed!";
-          message.style.color = "red";
-        }
-      } catch (error) {
-        message.textContent = `Error: ${error.message}`;
-        message.style.color = "red";
-      }
-    });
-  }
+    } catch (error) {
+        // Handle fetch error
+        messageElement.textContent = `Error: ${error.message}`;
+        messageElement.style.color = "red";
+    }
 });
+
+
+
+
+//https://cpr-csr-managements.onrender.com

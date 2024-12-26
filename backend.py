@@ -15,8 +15,8 @@ jwt = JWTManager(app)
 # MongoDB setup
 MONGO_URI = "mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/"  # Replace with your MongoDB Atlas connection string
 mongo_client = MongoClient(MONGO_URI)
-db = mongo_client['Anime-Galaxy']
-users_collection = db['users']
+db = mongo_client['CPR-Details']
+users_collection = db['Users']
 
 # User Registration
 @app.route('/register', methods=['POST'])

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Feedback</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        form div {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #5b9bd5;
+            outline: none;
+            box-shadow: 0 0 3px rgba(91, 155, 213, 0.5);
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        button {
+            background: #5b9bd5;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #497cb7;
+        }
+
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+    </style>
+    <script>
+        // Function to handle the form submission
+async function submitFeedback() {
+    const fromEmail = document.getElementById('fromEmail').value.trim();
+    const toEmail = document.getElementById('toEmail').value.trim();
+    const subject = document.getElementById('subject').value.trim();
+    const textContent = document.getElementById('feedbackContent').value.trim();
+
+    // Check if all fields are filled
+    if (!fromEmail || !toEmail || !subject || !textContent) {
+        alert('Please fill in all the fields.');
+        return;
+    }
+
+    // Prepare the data to send in the POST request
+    const data = {
+        from: fromEmail,
+        to: [toEmail], // Array of student emails (single for now)
+        subject: subject,
+        textcontent: textContent,
+    };
+
+    try {
+        // Send the data to the backend API
+        const response = await fetch('http://localhost:5000/send-feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+            // Parse error response from the server
+            const result = await response.json();
+            console.error('Error details:', result);
+            alert(`Error: ${result.error || 'Unknown error occurred'}`);
+        } else {
+            // Success handling
+            alert('Feedback sent successfully!');
+            document.getElementById('feedbackForm').reset();
+        }
+    } catch (error) {
+        console.error('Network error:', error);
+        alert('Failed to send feedback. Please check your connection or backend server.');
+    }
+}
+
+    </script>
+</head>
+<body>
+    <form id="feedbackForm" onsubmit="event.preventDefault(); submitFeedback();">
+        <h1>Send Feedback</h1>
+        <div>
+            <label for="fromEmail">From (Admin Email):</label>
+            <input type="email" id="fromEmail" name="fromEmail" required>
+        </div>
+        <div>
+            <label for="toEmail">To (Student Email):</label>
+            <input type="email" id="toEmail" name="toEmail" required>
+        </div>
+        <div>
+            <label for="subject">Subject:</label>
+            <input type="text" id="subject" name="subject" required>
+        </div>
+        <div>
+            <label for="feedbackContent">Feedback Content:</label>
+            <textarea id="feedbackContent" name="feedbackContent" rows="5" required></textarea>
+        </div>
+        <button type="submit">Send Feedback</button>
+    </form>
+</body>
+</html>

@@ -1,123 +1,85 @@
 from flask import Flask, request, jsonify
-from flask_jwt_extended import JWTManager, jwt_required
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, create_access_token
 from pymongo import MongoClient
 from flask_cors import CORS
+from datetime import datetime
 
-# Initialize Flask app and extensions
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes and origins
+
+bcrypt = Bcrypt(app)
 app.config['JWT_SECRET_KEY'] = '460680e7fe09d19e4063e23c51d3c53757920b054007273cd083703623c1cfea'  # Replace with your actual secret key
 jwt = JWTManager(app)
 
-# MongoDB setup (MongoDB Atlas)
-MONGO_URI = "mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/"  # Replace with your MongoDB URI
+# MongoDB setup
+MONGO_URI = "mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/"  # Replace with your MongoDB Atlas connection string
 mongo_client = MongoClient(MONGO_URI)
-db = mongo_client['CPR-Details']
+db = mongo_client['Anime-Galaxy']
 users_collection = db['users']
 
-# User Registration (No Hashing)
+# User Registration
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-
-    # Extract data from request
-    name = data.get('name')
-    email = data.get('email')
+    username = data.get('username')
     password = data.get('password')
-    section = data.get('section')
-    role = data.get('role')
 
-    # Validation checks
-    if not name or not email or not password or not section or not role:
-        return jsonify({'error': 'All fields are required'}), 400
+    if not username or not password:
+        return jsonify({'error': 'Username and password are required'}), 400
 
-    # Check if email already exists
-    if users_collection.find_one({'email': email}):
-        return jsonify({'error': 'Email already registered'}), 400
+    if users_collection.find_one({'username': username}):
+        return jsonify({'error': 'Username already exists'}), 400
 
-    # Insert user data into the database
-    user_data = {
-        'name': name,
-        'email': email,
-        'password': password,  # Note: Store hashed passwords in production!
-        'section': section,
-        'role': role
-    }
-    users_collection.insert_one(user_data)
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    user_id = users_collection.insert_one({'username': username, 'password': hashed_password}).inserted_id
 
-    return jsonify({'message': 'User registered successfully'}), 201
+    return jsonify({'message': 'User registered successfully', 'user_id': str(user_id)}), 201
 
+# User Login
 @app.route('/login', methods=['POST'])
 def login():
-    try:
-        data = request.json  # Parse incoming JSON
-        email = data.get('email')
-        password = data.get('password')
-
-        if not email or not password:
-            return jsonify({'error': 'Email and password are required'}), 400
-
-        # Find user by email
-        user = users_collection.find_one({'email': email})
-
-        if user and user['password'] == password:
-            return jsonify({
-                'message': 'Login successful',
-                'name': user['name'],
-                'role': user['role'],
-                'section': user['section']
-            }), 200
-
-        return jsonify({'error': 'Invalid email or password'}), 401
-    except Exception as e:
-        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
-
-# Password Reset (No Hashing)
-@app.route('/reset-password', methods=['POST'])
-def reset_password():
     data = request.get_json()
-    email = data.get('email')
-    new_password = data.get('new_password')
+    username = data.get('username')
+    password = data.get('password')
 
-    if not email or not new_password:
-        return jsonify({'error': 'Email and new password are required'}), 400
+    if not username or not password:
+        return jsonify({'error': 'Username and password are required'}), 400
 
-    # Find user by email
-    user = users_collection.find_one({"email": email})
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+    user = users_collection.find_one({'username': username})
+    if not user or not bcrypt.check_password_hash(user['password'], password):
+        return jsonify({'error': 'Invalid username or password'}), 401
 
-    # Update the password (no hashing)
-    users_collection.update_one({"email": email}, {"$set": {"password": new_password}})
+    token = create_access_token(identity=str(user['_id']))
+    return jsonify({'message': 'Login successful', 'token': token}), 200
 
-    return jsonify({"message": "Password reset successful"}), 200
-
-# Profile Update (change password from profile)
-@app.route('/update-password', methods=['PUT'])
-@jwt_required()  # Ensure the user is logged in
-def update_password():
+# Send Feedback
+@app.route('/send-feedback', methods=['POST'])
+def send_feedback():
     data = request.get_json()
-    email = data.get('email')
-    old_password = data.get('old_password')
-    new_password = data.get('new_password')
+    from_email = data.get('from')
+    to_email = data.get('to')  # Expecting an array of emails
+    subject = data.get('subject')
+    text_content = data.get('textcontent')
 
-    if not email or not old_password or not new_password:
-        return jsonify({'error': 'Email, old password, and new password are required'}), 400
+    if not from_email or not to_email or not subject or not text_content:
+        return jsonify({'error': 'All fields are required.'}), 400
 
-    # Find user by email
-    user = users_collection.find_one({"email": email})
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+    for recipient_email in to_email:
+        # Dynamically create/access a collection named after the recipient email
+        sanitized_collection_name = recipient_email.replace('.', '_').replace('@', '_')
+        feedback_collection = db[sanitized_collection_name]
 
-    # Check if old password is correct (plain text comparison)
-    if user['password'] != old_password:
-        return jsonify({"error": "Incorrect old password"}), 401
+        # Insert feedback into the collection
+        feedback_collection.insert_one({
+            'from': from_email,
+            'to': recipient_email,
+            'subject': subject,
+            'textcontent': text_content,
+            'timestamp': datetime.utcnow()  # Add a timestamp for recordkeeping
+        })
 
-    # Update the password (no hashing)
-    users_collection.update_one({"email": email}, {"$set": {"password": new_password}})
+    return jsonify({'message': 'Feedback sent and stored successfully!'}), 200
 
-    return jsonify({"message": "Password updated successfully"}), 200
-
-# Run the application
 if __name__ == '__main__':
     app.run(debug=True)

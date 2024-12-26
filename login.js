@@ -1,4 +1,4 @@
-document.getElementById("loginForm").addEventListener("submit", async (event) => {
+document.getElementById("submit").addEventListener("click", async (event) => {
     event.preventDefault(); // Prevent default form submission
 
     const email = document.getElementById("email").value.trim();

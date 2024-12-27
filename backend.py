@@ -23,33 +23,42 @@ users_collection = db['Users']
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    username = data.get('username')
+    name = data.get('name')
+    email = data.get('email')
     password = data.get('password')
+    section = data.get('section')
+    role = data.get('role')
 
-    if not username or not password:
-        return jsonify({'error': 'Username and password are required'}), 400
+    if not email or not password or not name or not section or not role:
+        return jsonify({'error': 'All fields are required'}), 400
 
     # Check if the user already exists
-    if users_collection.find_one({'email': username}):
-        return jsonify({'error': 'Username already exists'}), 400
+    if users_collection.find_one({'email': email}):
+        return jsonify({'error': 'Email already exists'}), 400
 
-    # Save the user with plaintext password (not recommended for production)
-    user_id = users_collection.insert_one({'email': username, 'password': password}).inserted_id
+    # Save the user details with plain-text password (not recommended for production)
+    user_id = users_collection.insert_one({
+        'name': name,
+        'email': email,
+        'password': password,
+        'section': section,
+        'role': role
+    }).inserted_id
 
     return jsonify({'message': 'User registered successfully', 'user_id': str(user_id)}), 201
 
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    username = data.get('username')
+    email = data.get('email')
     password = data.get('password')
 
-    if not username or not password:
-        return jsonify({'error': 'Username and password are required'}), 400
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required'}), 400
 
-    user = users_collection.find_one({'email': username})
+    user = users_collection.find_one({'email': email})
     if not user or user['password'] != password:
-        return jsonify({'error': 'Invalid username or password'}), 401
+        return jsonify({'error': 'Invalid email or password'}), 401
 
     # Generate a JWT token
     token = create_access_token(identity=str(user['_id']))

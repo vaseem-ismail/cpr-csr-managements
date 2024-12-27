@@ -1,7 +1,7 @@
 document.getElementById("submit").addEventListener("click", async (event) => {
     event.preventDefault(); // Prevent default form submission
 
-    const email = document.getElementById("email").value.trim();
+    const username = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value.trim();
     const messageElement = document.getElementById("message");
 
@@ -11,7 +11,7 @@ document.getElementById("submit").addEventListener("click", async (event) => {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ username, password })
         });
 
         // Ensure the response is JSON and handle non-OK responses

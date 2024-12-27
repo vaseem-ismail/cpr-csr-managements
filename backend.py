@@ -20,31 +20,27 @@ mongo_client = MongoClient(MONGO_URI)
 db = mongo_client['CPR-Details']
 users_collection = db['Users']
 
-# User Registration
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    email = data.get('email')
+    username = data.get('username')
     password = data.get('password')
 
-    if not email or not password:
-        return jsonify({'error': 'Email and password are required'}), 400
+    if not username or not password:
+        return jsonify({'error': 'Username and password are required'}), 400
 
-    if users_collection.find_one({'email': email}):
-        return jsonify({'error': 'Email already exists'}), 400
+    # Check if the user already exists
+    if users_collection.find_one({'username': username}):
+        return jsonify({'error': 'Username already exists'}), 400
 
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    user_id = users_collection.insert_one({'email': email, 'password': hashed_password}).inserted_id
+    # Save the user with plaintext password (not recommended for production)
+    user_id = users_collection.insert_one({'username': username, 'password': password}).inserted_id
 
     return jsonify({'message': 'User registered successfully', 'user_id': str(user_id)}), 201
 
 @app.route('/login', methods=['POST'])
 def login():
-    # Parse the JSON body of the request
     data = request.get_json()
-    if not data:
-        return jsonify({'error': 'Invalid request. Ensure the Content-Type is application/json and the body contains valid JSON.'}), 400
-
     username = data.get('username')
     password = data.get('password')
 
@@ -52,7 +48,7 @@ def login():
         return jsonify({'error': 'Username and password are required'}), 400
 
     user = users_collection.find_one({'username': username})
-    if not user or not bcrypt.check_password_hash(user['password'], password):
+    if not user or user['password'] != password:
         return jsonify({'error': 'Invalid username or password'}), 401
 
     # Generate a JWT token

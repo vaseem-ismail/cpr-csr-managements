@@ -49,7 +49,7 @@
         .login-container button:hover {
             background-color: #0056b3;
         }
-        .error {
+        #loginMessage {
             color: red;
             text-align: center;
             margin-top: 10px;
@@ -59,7 +59,8 @@
 <body>
     <div class="login-container">
         <h2>Login</h2>
-        <div id="error-message" class="error"></div>
+        <p id="loginMessage"></p>
+
         <form id="loginForm">
             <input type="email" id="loginEmail" placeholder="Enter your email" required />
             <input type="password" id="loginPassword" placeholder="Enter your password" required />
@@ -67,31 +68,57 @@
         </form>
         
     </div>
-
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const loginForm = document.getElementById("loginForm");
-            loginForm.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const email = document.getElementById("loginEmail").value;
-                const password = document.getElementById("loginPassword").value;
-    
-                const response = await fetch("http://127.0.0.1:5000/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password }),
-                });
-    
-                const data = await response.json();
-                if (response.ok) {
-                    alert("Login successful!");
-                    window.location.href = "home.html";
-                } else {
-                    alert(`Error: ${data.error || "Login failed!"}`);
-                }
+    document.addEventListener("DOMContentLoaded", () => {
+        const loginForm = document.getElementById("loginForm");
+        const loginMessage = document.getElementById("loginMessage");
+      
+        const API_URL = "http://localhost:5000";
+      
+        loginForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+      
+          const email = document.getElementById("loginEmail").value;
+          const password = document.getElementById("loginPassword").value;
+      
+          try {
+            const response = await fetch(`${API_URL}/login`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
             });
+      
+            const data = await response.json();
+      
+            if (response.ok) {
+              loginMessage.style.color = "green";
+              loginMessage.textContent = `Login successful!`;
+      
+              // Store the user data in localStorage
+              localStorage.setItem("user", JSON.stringify(data));
+      
+              if (data.role === "Student") {
+                window.location.href = "./HTML/student.html";
+              } else if (data.role === "Admin") {
+                window.location.href = "./HTML/admin.html";
+              } else if (data.role === "Lead") {
+                window.location.href = "./HTML/lead.html";
+              } else {
+                alert("Unknown role. Please contact the administrator.");
+              }
+            } else {
+              loginMessage.style.color = "red";
+              loginMessage.textContent = data.error || "Login failed!";
+            }
+          } catch (error) {
+            console.error("Login error:", error);
+            loginMessage.style.color = "red";
+            loginMessage.textContent = "Network error. Please try again later.";
+          }
         });
-    </script>
+      });
+</script>      
+      
     
 </body>
 </html>

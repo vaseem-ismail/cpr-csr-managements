@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from pymongo import MongoClient
 from flask_cors import CORS
 from datetime import datetime
+import re
 
 # Flask app setup
 app = Flask(__name__)
@@ -57,12 +58,17 @@ def login():
         return jsonify({'error': 'Email and password are required'}), 400
 
     user = users_collection.find_one({'email': email})
-    if not user or user['password'] != password:
+    if not user or user['password'] != password:  # No hashing as per your requirement
         return jsonify({'error': 'Invalid email or password'}), 401
 
     # Generate a JWT token
     token = create_access_token(identity=str(user['_id']))
-    return jsonify({'message': 'Login successful', 'token': token}), 200
+    return jsonify({
+        'name': user['name'],
+        'email': user['email'],
+        'role': user['role']
+    }), 200
+
 
 
 # Get User Details
@@ -80,34 +86,44 @@ def profile():
         'message': 'User profile fetched successfully.'
     }), 200
 
-# Send Feedback
 @app.route('/send-feedback', methods=['POST'])
 @jwt_required()
 def send_feedback():
-    data = request.get_json()
-    from_email = data.get('from')
-    to_email = data.get('to')  # Expecting an array of emails
-    subject = data.get('subject')
-    text_content = data.get('textcontent')
+    try:
+        data = request.get_json()
+        from_email = data.get('from')
+        to_email = data.get('to')  # Expecting an array of emails
+        subject = data.get('subject')
+        text_content = data.get('textcontent')
 
-    if not from_email or not to_email or not subject or not text_content:
-        return jsonify({'error': 'All fields are required'}), 400
+        # Validate required fields
+        if not from_email or not to_email or not subject or not text_content:
+            return jsonify({'error': 'All fields are required'}), 400
 
-    for recipient_email in to_email:
-        # Dynamically create/access a collection named after the recipient email
-        sanitized_collection_name = recipient_email.replace('.', '_').replace('@', '_')
-        feedback_collection = db[sanitized_collection_name]
+        # Validate email format
+        email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+        if not re.match(email_regex, from_email) or not all(re.match(email_regex, email) for email in to_email):
+            return jsonify({'error': 'Invalid email address provided'}), 400
 
-        # Insert feedback into the collection
-        feedback_collection.insert_one({
-            'from': from_email,
-            'to': recipient_email,
-            'subject': subject,
-            'textcontent': text_content,
-            'timestamp': datetime.utcnow()  # Add a timestamp for recordkeeping
-        })
+        for recipient_email in to_email:
+            # Sanitize collection name
+            sanitized_collection_name = recipient_email.replace('.', '_').replace('@', '_')
+            feedback_collection = db[sanitized_collection_name]
 
-    return jsonify({'message': 'Feedback sent and stored successfully!'}), 200
+            # Insert feedback into the collection
+            feedback_collection.insert_one({
+                'from': from_email,
+                'to': recipient_email,
+                'subject': subject,
+                'textcontent': text_content,
+                'timestamp': datetime.utcnow()  # Add a timestamp for recordkeeping
+            })
+
+        return jsonify({'message': 'Feedback sent and stored successfully!'}), 200
+    except Exception as e:
+        # Log exception (print or use logging library)
+        print(f"Error in send_feedback: {e}")
+        return jsonify({'error': 'An internal error occurred'}), 500
 
 # Main entry point
 if __name__ == '__main__':

@@ -1,38 +1,37 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from pymongo import MongoClient
+import datetime
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/send-feedback', methods=['POST'])
-def send_feedback():
-    data = request.get_json()
-    from_email = data.get('from')
-    to_email = data.get('to')
-    subject = data.get('subject')
-    text_content = data.get('textcontent')
+@app.route('/submit-feedback', methods=['POST'])
+def submit_feedback():
+    try:
+        data = request.json
+        sender = data.get('sender_email')
+        receiver = data.get('receiver_email')
+        feedback = data.get('feedback')
 
-    if not from_email or not to_email or not subject or not text_content:
-        return jsonify({'error': 'All fields are required.'}), 400
+        if not sender or not receiver or not feedback:
+            return jsonify({"error": "All fields are required"}), 400
 
-    # Simulate sending feedback (replace with actual email-sending logic)
-    print(f"Feedback received from {from_email} to {to_email}: {subject} - {text_content}")
+        collection_name = receiver
+        receiver_collection = db[collection_name]
 
-    return jsonify({'message': 'Feedback sent successfully!'}), 200
+        feedback_document = {
+            "sender": sender,
+            "feedback": feedback,
+            "timestamp": datetime.utcnow()
+        }
+        receiver_collection.insert_one(feedback_document)
 
-if __name__ == '__main__':
+        return jsonify({"message": "Feedback submitted successfully"}), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "An internal error occurred. Please try again."}), 500
+
+
+if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-#mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/

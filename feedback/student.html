@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="styles.css"> <!-- Link to external CSS (optional) -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #4caf50;
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+    }
+    main {
+      padding: 20px;
+    }
+    .welcome {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .info {
+      margin-top: 20px;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .info h3 {
+      margin: 0;
+    }
+    .logout-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .logout-btn:hover {
+      background-color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Student Dashboard</h1>
+  </header>
+  <main>
+    <p class="welcome">Welcome, <span id="studentName"></span>!</p>
+    <div class="info">
+      <h3>Your Details:</h3>
+      <p><strong>Email:</strong> <span id="studentEmail"></span></p>
+      <p><strong>Section:</strong> <span id="studentSection"></span></p>
+      <p><strong>Role:</strong> <span id="studentRole"></span></p>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </main>
+ <a href="./feedback.html">Show My Feedback</a>
+  <script>
+    // Fetch student data from localStorage
+const studentData = JSON.parse(localStorage.getItem("user"));
+
+if (!studentData || studentData.role !== "Student") {
+  alert("Unauthorized access! Redirecting to login page.");
+  window.location.href = "index.html";
+} else {
+  // Populate student details
+  document.getElementById("studentName").textContent = studentData.name;
+  document.getElementById("studentEmail").textContent = studentData.email;
+  document.getElementById("studentSection").textContent = studentData.section;
+  document.getElementById("studentRole").textContent = studentData.role;
+}
+
+function logout() {
+  // Clear user data from localStorage and redirect to login
+  localStorage.removeItem("user");
+  window.location.href = "index.html";
+}
+
+  </script>
+</body>
+</html>

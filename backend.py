@@ -120,6 +120,27 @@ def submit_feedback():
     except Exception as e:
         print(f"Error occurred: {e}")
         return jsonify({"error": "An internal error occurred"}), 500
+    
+@app.route('/get-feedbacks', methods=['POST'])
+def get_feedbacks():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+
+        # Convert email to collection name format
+        collection_name = email.replace('@', '_').replace('.', '_')
+        if collection_name not in db.list_collection_names():
+            return jsonify({"error": f"No feedbacks found for {email}"}), 404
+
+        feedback_collection = db[collection_name]
+        feedbacks = list(feedback_collection.find({}, {'_id': 0}))  # Exclude `_id` field
+        return jsonify(feedbacks), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Main entry point
 if __name__ == '__main__':

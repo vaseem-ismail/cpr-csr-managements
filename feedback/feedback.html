@@ -64,7 +64,7 @@
                             const feedbacks = await response.json();
                             document.getElementById("feedbacksList").innerHTML = feedbacks.map(feedback => `
                         <li>
-                            <strong>${feedback.subject}</strong>: ${feedback.textcontent} (From: ${feedback.from})
+                            <strong>${feedback.timestamp}</strong>: ${feedback.textcontent} (From: ${feedback.from})
                         </li>
                     `).join('');
                         } else {

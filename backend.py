@@ -30,11 +30,11 @@ def register():
         return jsonify({'error': 'Username and password are required'}), 400
 
     # Check if the user already exists
-    if users_collection.find_one({'username': username}):
+    if users_collection.find_one({'email': username}):
         return jsonify({'error': 'Username already exists'}), 400
 
     # Save the user with plaintext password (not recommended for production)
-    user_id = users_collection.insert_one({'username': username, 'password': password}).inserted_id
+    user_id = users_collection.insert_one({'email': username, 'password': password}).inserted_id
 
     return jsonify({'message': 'User registered successfully', 'user_id': str(user_id)}), 201
 
@@ -47,7 +47,7 @@ def login():
     if not username or not password:
         return jsonify({'error': 'Username and password are required'}), 400
 
-    user = users_collection.find_one({'username': username})
+    user = users_collection.find_one({'email': username})
     if not user or user['password'] != password:
         return jsonify({'error': 'Invalid username or password'}), 401
 

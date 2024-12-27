@@ -73,7 +73,7 @@
         const loginForm = document.getElementById("loginForm");
         const loginMessage = document.getElementById("loginMessage");
       
-        const API_URL = "http://localhost:5000";
+        const API_URL = "https://cpr-csr-managements.onrender.com";
       
         loginForm.addEventListener("submit", async (e) => {
           e.preventDefault();
@@ -98,7 +98,7 @@
               localStorage.setItem("user", JSON.stringify(data));
       
               if (data.role === "Student") {
-                window.location.href = "./HTML/student.html";
+                window.location.href = ".//student.html";
               } else if (data.role === "Admin") {
                 window.location.href = "./HTML/admin.html";
               } else if (data.role === "Lead") {

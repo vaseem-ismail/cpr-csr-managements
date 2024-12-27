@@ -1,28 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Feedback Form</title>
-  <link rel="stylesheet" href="./feedback.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Feedback Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .feedback-list {
+            margin-top: 20px;
+        }
+
+        .feedback-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .feedback-item .date {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .feedback-item .content {
+            font-size: 1.1em;
+            color: #333;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const studentData = JSON.parse(localStorage.getItem("user"));
+
+            if (!studentData || studentData.role !== "Student") {
+                alert("Unauthorized access! Redirecting to login page.");
+                window.location.href = "index.html";
+            } else {
+                const email = studentData.email;
+
+                const fetchFeedback = async () => {
+                    try {
+                        const response = await fetch("http://localhost:5003/get-feedbacks", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({ email }) // Send email in the request body
+                        });
+
+                        if (response.ok) {
+                            const feedbacks = await response.json();
+                            document.getElementById("feedbacksList").innerHTML = feedbacks.map(feedback => `
+                        <li>
+                            <strong>${feedback.subject}</strong>: ${feedback.textcontent} (From: ${feedback.from})
+                        </li>
+                    `).join('');
+                        } else {
+                            const error = await response.json();
+                            alert(error.error || 'Failed to load feedbacks');
+                        }
+                    } catch (error) {
+                        console.error("Error fetching feedbacks:", error);
+                        alert("Error fetching feedbacks. Please try again later.");
+                    }
+                };
+
+                // Fetch feedback immediately and then every 3 seconds
+                await fetchFeedback();
+                setInterval(fetchFeedback, 3000);
+            }
+
+            // Logout functionality
+            document.getElementById("logoutBtn").addEventListener("click", () => {
+                localStorage.removeItem("user");
+                window.location.href = "../index.html";
+            });
+        });
+
+    </script>
 </head>
+
 <body>
-  <div class="container">
-    <h1>Feedback Form</h1>
-    <form id="feedbackForm">
-      <label for="sender">Sender Email:</label>
-      <input type="email" id="sender" name="sender" placeholder="Enter your email" required />
+    <h1>Student Feedback Dashboard</h1>
+    <ul id="feedbacksList"></ul>
 
-      <label for="receiver">Receiver Email:</label>
-      <input type="email" id="receiver" name="receiver" placeholder="Enter receiver's email" required />
-
-      <label for="feedback">Feedback:</label>
-      <textarea id="feedback" name="feedback" placeholder="Enter your feedback" required></textarea>
-
-      <button type="submit">Submit Feedback</button>
-    </form>
-    <p id="message"></p>
-  </div>
-  <script src="./feedback.js"></script>
 </body>
+
 </html>

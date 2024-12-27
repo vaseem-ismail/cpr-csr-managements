@@ -86,44 +86,40 @@ def profile():
         'message': 'User profile fetched successfully.'
     }), 200
 
-@app.route('/send-feedback', methods=['POST'])
-@jwt_required()
-def send_feedback():
+@app.route('/submit-feedback', methods=['POST'])
+def submit_feedback():
     try:
-        data = request.get_json()
-        from_email = data.get('from')
-        to_email = data.get('to')  # Expecting an array of emails
-        subject = data.get('subject')
-        text_content = data.get('textcontent')
+        # Parse JSON from the request
+        feedback_data = request.json
+
+        # Extract fields from JSON
+        sender_email = feedback_data.get('from')
+        receiver_email = feedback_data.get('to')
+        feedback_message = feedback_data.get('feedback')
 
         # Validate required fields
-        if not from_email or not to_email or not subject or not text_content:
-            return jsonify({'error': 'All fields are required'}), 400
+        if not sender_email or not receiver_email or not feedback_message:
+            return jsonify({"error": "All fields (from, to, feedback) are required"}), 400
 
-        # Validate email format
-        email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
-        if not re.match(email_regex, from_email) or not all(re.match(email_regex, email) for email in to_email):
-            return jsonify({'error': 'Invalid email address provided'}), 400
+        # Dynamically create or use a collection named after the receiver's email
+        collection_name = receiver_email.replace('.', '_').replace('@', '_')  # Sanitizing collection name
+        feedback_collection = db[collection_name]
 
-        for recipient_email in to_email:
-            # Sanitize collection name
-            sanitized_collection_name = recipient_email.replace('.', '_').replace('@', '_')
-            feedback_collection = db[sanitized_collection_name]
+        # Create a feedback document
+        feedback_document = {
+            "from": sender_email,
+            "to": receiver_email,
+            "textcontent": feedback_message,
+            "timestamp": datetime.utcnow()
+        }
 
-            # Insert feedback into the collection
-            feedback_collection.insert_one({
-                'from': from_email,
-                'to': recipient_email,
-                'subject': subject,
-                'textcontent': text_content,
-                'timestamp': datetime.utcnow()  # Add a timestamp for recordkeeping
-            })
+        # Insert the feedback document into the collection
+        feedback_collection.insert_one(feedback_document)
 
-        return jsonify({'message': 'Feedback sent and stored successfully!'}), 200
+        return jsonify({"message": f"Feedback stored in collection '{receiver_email}'"}), 200
     except Exception as e:
-        # Log exception (print or use logging library)
-        print(f"Error in send_feedback: {e}")
-        return jsonify({'error': 'An internal error occurred'}), 500
+        print(f"Error occurred: {e}")
+        return jsonify({"error": "An internal error occurred"}), 500
 
 # Main entry point
 if __name__ == '__main__':

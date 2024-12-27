@@ -1,127 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Send Feedback</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        form {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        label {
-            display: block;
-            margin: 10px 0 5px;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .message {
-            margin-top: 20px;
-            font-size: 16px;
-            color: green;
-        }
-        .error {
-            color: red;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Feedback</title>
+  <style>
+    body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 500px;
+  margin: 50px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+}
+
+label {
+  margin: 10px 0 5px;
+  display: block;
+  font-weight: bold;
+}
+
+input, textarea, button {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#responseMessage {
+  text-align: center;
+  font-size: 1rem;
+  color: green;
+}
+
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Submit Feedback</h1>
+    <form id="feedbackForm">
+      <label for="from">Your Email:</label>
+      <input type="email" id="from" placeholder="Enter your email" required />
 
-    <h1>Send Feedback</h1>
+      <label for="to">Receiver's Email:</label>
+      <input type="email" id="to" placeholder="Enter receiver's email" required />
 
-    <form id="feedback-form">
-        <label for="from-email">Your Email (Admin):</label>
-        <input type="email" id="from-email" name="from-email" required>
+      <label for="feedback">Feedback:</label>
+      <textarea id="feedback" placeholder="Write your feedback" required></textarea>
 
-        <label for="to-emails">Recipient Emails (Students):</label>
-        <textarea id="to-emails" name="to-emails" placeholder="Enter student emails separated by commas" required></textarea>
-
-        <label for="subject">Subject:</label>
-        <input type="text" id="subject" name="subject" required>
-
-        <label for="textcontent">Feedback:</label>
-        <textarea id="textcontent" name="textcontent" required></textarea>
-
-        <button type="submit">Send Feedback</button>
+      <button type="submit">Submit</button>
     </form>
+    <p id="responseMessage"></p>
+  </div>
+  <script>
+    document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    <div class="message" id="response-message"></div>
+  const sender = document.getElementById("from").value;
+  const receiver = document.getElementById("to").value;
+  const feedback = document.getElementById("feedback").value;
+  const responseMessage = document.getElementById("responseMessage");
 
-    <script>
-        // Handle form submission
-        document.getElementById('feedback-form').addEventListener('submit', function(event) {
-            event.preventDefault();
+  try {
+    const response = await fetch("http://localhost:5000/submit-feedback", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: sender,
+        to: receiver,
+        feedback: feedback,
+      }),
+    });
 
-            // Get form data
-            const fromEmail = document.getElementById('from-email').value;
-            const toEmails = document.getElementById('to-emails').value.split(',').map(email => email.trim());
-            const subject = document.getElementById('subject').value;
-            const textContent = document.getElementById('textcontent').value;
+    const data = await response.json();
 
-            // Construct the data object
-            const data = {
-                from: fromEmail,
-                to: toEmails,
-                subject: subject,
-                textcontent: textContent
-            };
+    if (response.ok) {
+      responseMessage.style.color = "green";
+      responseMessage.textContent = data.message;
+      document.getElementById("feedbackForm").reset();
+    } else {
+      responseMessage.style.color = "red";
+      responseMessage.textContent = data.error || "Failed to submit feedback.";
+    }
+  } catch (error) {
+    responseMessage.style.color = "red";
+    responseMessage.textContent = "An error occurred. Please try again.";
+  }
+});
 
-            // Send POST request to the backend
-            fetch('http://127.0.0.1:5001/send-feedback', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                const messageDiv = document.getElementById('response-message');
-                if (result.message) {
-                    messageDiv.textContent = result.message;
-                    messageDiv.classList.remove('error');
-                    messageDiv.classList.add('message');
-                } else {
-                    messageDiv.textContent = result.error || 'An error occurred.';
-                    messageDiv.classList.remove('message');
-                    messageDiv.classList.add('error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                const messageDiv = document.getElementById('response-message');
-                messageDiv.textContent = 'Failed to send feedback.';
-                messageDiv.classList.remove('message');
-                messageDiv.classList.add('error');
-            });
-        });
-    </script>
-
+  </script>
 </body>
 </html>
+

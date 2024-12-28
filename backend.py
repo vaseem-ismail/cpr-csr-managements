@@ -66,7 +66,8 @@ def login():
     return jsonify({
         'name': user['name'],
         'email': user['email'],
-        'role': user['role']
+        'role': user['role'],
+        'section': user['section']
     }), 200
 
 
@@ -75,6 +76,7 @@ def login():
 @app.route('/profile', methods=['GET'])
 @jwt_required()
 def profile():
+    
     user_id = get_jwt_identity()
     user = users_collection.find_one({'_id': user_id})
 

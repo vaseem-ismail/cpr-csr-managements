@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student List</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .status {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Student List</h2>
+
+    <select id="sectionSelector" onchange="loadStudents()">
+        <option value="">Select Section</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+    </select>
+
+    <select id="monthSelector" onchange="loadStudents()">
+        <option value="">Select Month</option>
+        <option value="January">January</option>
+        <option value="February">February</option>
+        <option value="March">March</option>
+        <option value="April">April</option>
+        <!-- Add more months as needed -->
+    </select>
+
+    <table id="studentsTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th> <!-- Added Status Column -->
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        async function loadStudents() {
+            const section = document.getElementById("sectionSelector").value;
+            const month = document.getElementById("monthSelector").value;
+
+            if (!section || !month) {
+                alert("Please select both section and month.");
+                return;
+            }
+
+            // Fetch data from backend
+            const response = await fetch(`http://127.0.0.1:5000/api/students?section=${section}&month=${month}`);
+            const students = await response.json();
+
+            // If there is an error or no students
+            if (students.error) {
+                alert(students.error);
+                return;
+            }
+
+            // Display students in a table
+            const tableBody = document.querySelector("#studentsTable tbody");
+            tableBody.innerHTML = "";  // Clear previous data
+
+            students.forEach(student => {
+                const row = document.createElement("tr");
+
+                const nameCell = document.createElement("td");
+                const emailCell = document.createElement("td");
+                const statusCell = document.createElement("td");
+
+                nameCell.textContent = student.name;
+                emailCell.textContent = student.email;
+                statusCell.textContent = student.status; // Display status
+
+                row.appendChild(nameCell);
+                row.appendChild(emailCell);
+                row.appendChild(statusCell); // Add status cell
+                tableBody.appendChild(row);
+            });
+        }
+    </script>
+
+</body>
+</html>

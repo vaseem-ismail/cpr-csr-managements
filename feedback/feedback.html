@@ -10,34 +10,75 @@
             font-family: Arial, sans-serif;
             margin: 20px;
             background-color: #f4f4f9;
+            text-align: center;
+            /* Align text to the center */
         }
 
         h1 {
-            color: #333;
+            color: #4a90e2;
+            /* A pleasing blue shade for the header */
+            margin-bottom: 20px;
         }
 
         .feedback-list {
             margin-top: 20px;
+            list-style-type: none;
+            /* Remove bullet points */
+            padding: 0;
         }
 
         .feedback-item {
-            background: #fff;
+            background: #ffffff;
             border: 1px solid #ddd;
             padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 10px auto;
+            /* Center-align the feedback items */
+            border-radius: 8px;
+            /* Round the corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            /* Limit the width for better readability */
+            text-align: left;
+            /* Align text to the left for feedback items */
         }
 
         .feedback-item .date {
             font-size: 0.9em;
-            color: #666;
-            margin-bottom: 5px;
+            color: #888;
+            /* Light gray for date */
+            margin-bottom: 8px;
         }
 
         .feedback-item .content {
             font-size: 1.1em;
             color: #333;
+            /* Dark gray for content */
+        }
+
+        ul#feedbacksList li {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f9fafb;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            color: #444;
+        }
+
+        #logoutBtn {
+            background-color: #ff6b6b;
+            /* Red shade for logout button */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        #logoutBtn:hover {
+            background-color: #e63939;
+            /* Darker red on hover */
         }
     </style>
     <script>
@@ -52,7 +93,7 @@
 
                 const fetchFeedback = async () => {
                     try {
-                        const response = await fetch("http://localhost:5003/get-feedbacks", {
+                        const response = await fetch("https://cpr-csr-managements.onrender.com/get-feedbacks", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json"

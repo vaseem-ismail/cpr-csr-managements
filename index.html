@@ -98,11 +98,11 @@
               localStorage.setItem("user", JSON.stringify(data));
       
               if (data.role === "Student") {
-                window.location.href = ".//student.html";
-              } else if (data.role === "Admin") {
-                window.location.href = "./HTML/admin.html";
-              } else if (data.role === "Lead") {
-                window.location.href = "./HTML/lead.html";
+                window.location.href = "./student/student.html";
+              } else if (data.role === "admin") {
+                window.location.href = "./admin/admin.html";
+              } else if (data.role === "lead") {
+                window.location.href = "./lead/lead.html";
               } else {
                 alert("Unknown role. Please contact the administrator.");
               }

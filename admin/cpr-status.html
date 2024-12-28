@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPR Status Admin</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select {
+            margin: 10px 0;
+            padding: 5px;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            padding: 5px 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background: #218838;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>CPR Status Admin</h1>
+
+        <label for="monthSelect">Choose a Month:</label>
+        <select id="monthSelect" onchange="fetchStudents()">
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+        </select>
+
+        <table id="studentTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                <!-- Students will be dynamically added here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const backendURL = "http://localhost:5000";
+
+        const fetchStudents = async () => {
+            const month = document.getElementById("monthSelect").value;
+            const tableBody = document.getElementById("studentTableBody");
+            tableBody.innerHTML = ""; // Clear the table before fetching new data
+
+            try {
+                const response = await fetch(`${backendURL}/students/${month}`);
+                const students = await response.json();
+                const parsedStudents = JSON.parse(students);
+
+                parsedStudents.forEach((student) => {
+                    const row = document.createElement("tr");
+
+                    row.innerHTML = `
+                <td>${student.name}</td>
+                <td>${student.email}</td>
+                <td>${student.status}</td>
+                <td>
+                  <button 
+                    onclick="updateStatus('${student._id}', '${month}')"
+                    ${student.status === "Completed" ? "disabled" : ""}
+                  >
+                    Mark Completed
+                  </button>
+                </td>
+              `;
+
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Error fetching students:", error);
+            }
+        };
+
+        const updateStatus = async (id, month) => {
+            try {
+                await fetch(`${backendURL}/students/${month}/update`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ _id: id, status: "Completed" }),
+                });
+
+                fetchStudents(); // Refresh the data
+            } catch (error) {
+                console.error("Error updating status:", error);
+            }
+        };
+
+        // Fetch students for the default month on page load
+        fetchStudents();
+    </script>
+</body>
+
+</html>

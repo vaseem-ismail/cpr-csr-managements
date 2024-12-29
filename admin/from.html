@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px;
+            gap: 20px;
+        }
+
+        .form-container,
+        .feedback-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container {
+            flex: 7;
+            /* 70% width */
+        }
+
+        .feedback-container {
+            flex: 3;
+            /* 30% width */
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            margin: 10px 0 5px;
+            display: block;
+            font-weight: bold;
+        }
+
+        input,
+        textarea,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[readonly] {
+            background-color: #f1f1f1;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #responseMessage,
+        #fetchMessage {
+            text-align: center;
+            font-size: 1rem;
+            color: green;
+        }
+
+        .feedback-list {
+            margin-top: 20px;
+        }
+
+        .feedback-item {
+            background: #f1f1f1;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <!-- Feedback Submission (70% width) -->
+        <div class="form-container">
+            <h1>Submit Feedback</h1>
+            <form id="feedbackForm">
+                <label for="from">Your Email:</label>
+                <input type="text" id="from" readonly /> <!-- Read-only input to display sender email -->
+
+                <label for="to">Receiver's Email:</label>
+                <input type="email" id="to" placeholder="Enter receiver's email" required />
+
+                <label for="feedback">Feedback:</label>
+                <textarea id="feedback" placeholder="Write your feedback" required></textarea>
+
+                <button type="submit">Submit</button>
+            </form>
+            <p id="responseMessage"></p>
+        </div>
+
+        <!-- Feedback Receiving (30% width) -->
+        <div class="feedback-container">
+            <h2>View Feedback</h2>
+            <div class="feedback-list" id="feedbackList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Automatically set sender email from local storage
+        document.addEventListener("DOMContentLoaded", () => {
+            const senderEmail = JSON.parse(localStorage.getItem("user")).email;
+            if (senderEmail) {
+                document.getElementById("from").value = senderEmail;
+                fetchFeedback(senderEmail); // Automatically fetch feedback for this email
+            } else {
+                alert("Sender email not found in local storage.");
+            }
+        });
+
+        // Submit feedback
+        document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const sender = document.getElementById("from").value;
+            const receiver = document.getElementById("to").value;
+            const feedback = document.getElementById("feedback").value;
+            const responseMessage = document.getElementById("responseMessage");
+
+            try {
+                const response = await fetch("http://127.0.0.1:5000/submit-feedback", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        from: sender,
+                        to: receiver,
+                        feedback: feedback,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    responseMessage.style.color = "green";
+                    responseMessage.textContent = data.message;
+                    document.getElementById("feedbackForm").reset();
+                } else {
+                    responseMessage.style.color = "red";
+                    responseMessage.textContent = data.error || "Failed to submit feedback.";
+                }
+            } catch (error) {
+                responseMessage.style.color = "red";
+                responseMessage.textContent = "An error occurred. Please try again.";
+            }
+        });
+            // Fetch feedback
+            async function fetchFeedback(senderEmail) {
+                const feedbackList = document.getElementById("feedbackList");
+
+                feedbackList.innerHTML = "<p>Loading feedback...</p>";
+
+                try {
+                    const response = await fetch(`http://127.0.0.1:5000/get-feedback/${senderEmail}`);
+                    const data = await response.json();
+
+                    feedbackList.innerHTML = ""; // Clear loading message
+
+                    if (response.ok) {
+                        data.feedbacks.forEach((feedback) => {
+                            const feedbackItem = document.createElement("div");
+                            feedbackItem.classList.add("feedback-item");
+                            feedbackItem.innerHTML = `
+              <p><strong>From:</strong> ${feedback.from}</p>
+              <p><strong>To:</strong> ${feedback.to}</p>
+              <p><strong>Message:</strong> ${feedback.textcontent}</p>
+              <p><small><strong>Timestamp:</strong> ${new Date(feedback.timestamp).toLocaleString()}</small></p>
+            `;
+                            feedbackList.appendChild(feedbackItem);
+                        });
+                    } else {
+                        feedbackList.innerHTML = "<p>No feedback found.</p>";
+                    }
+                } catch (error) {
+                    feedbackList.innerHTML = "<p>An error occurred while fetching feedback.</p>";
+                }
+            }`
+    </script>
+</body>
+
+</html>

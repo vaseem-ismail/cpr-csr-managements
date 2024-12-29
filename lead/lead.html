@@ -1,32 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student List</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+            color: #4CAF50;
+        }
+
+        select {
+            display: inline-block;
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+            color: #333;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
         table {
-            width: 100%;
+            width: 90%;
+            margin: 20px auto;
             border-collapse: collapse;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
         }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 8px;
+
+        th,
+        td {
+            padding: 12px;
             text-align: left;
+            border: 1px solid #ddd;
         }
+
         th {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-        .status {
+
+        tr:hover {
+            background-color: #e9f7e9;
+
+        }
+
+        td {
             text-align: center;
+        }
+
+        .status {
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        #error {
+            margin-left: 42%;
+            position: absolute;
+            margin-top: 20px;
+            color: red;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 14px;
+            }
+
+            select {
+                width: 90%;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <h2>Student List</h2>
+    <span id="error"></span>
 
     <select id="sectionSelector" onchange="loadStudents()">
         <option value="">Select Section</option>
@@ -59,14 +135,18 @@
         async function loadStudents() {
             const section = document.getElementById("sectionSelector").value;
             const month = document.getElementById("monthSelector").value;
+            const error = document.getElementById("error");
 
             if (!section || !month) {
-                alert("Please select both section and month.");
+                error.textContent = "Please select both section and month.";
+                error.style.color = "red";
                 return;
             }
 
+            error.style.display = "none";
+
             // Fetch data from backend
-            const response = await fetch(`http://127.0.0.1:5000/api/students?section=${section}&month=${month}`);
+            const response = await fetch(`https://cpr-csr-managements-1.onrender.com/api/students?section=${section}&month=${month}`);
             const students = await response.json();
 
             // If there is an error or no students
@@ -99,4 +179,5 @@
     </script>
 
 </body>
+
 </html>

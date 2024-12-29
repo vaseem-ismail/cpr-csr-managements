@@ -161,12 +161,13 @@
                     document.getElementById("adminName").textContent = adminData.name;
                     document.getElementById("adminEmail").textContent = adminData.email;
                     adminRole.textContent = adminData.role;
+                    document.getElementById("adminSection").textContent = adminData.section
                 }
 
                 // Function to log out and clear the session
                 document.getElementById("logoutBtn").addEventListener("click", () => {
                     localStorage.removeItem("user");
-                    window.location.href = "index.html";
+                    window.location.href = "../index.html";
                 });
             });
         // Function to handle the form submission
@@ -227,9 +228,12 @@
     <h1>Welcome, <span id="adminName"></span></h1>
     <p>Email: <span id="adminEmail"></span></p>
     <p>Role: <span id="adminRole"></span></p>
+    <p1>Section:<span id="adminSection"></span></p1>
 
     <button id="logoutBtn">Logout</button>
-    <form id="feedbackForm" onsubmit="event.preventDefault(); submitFeedback();">
+    <a href="./cpr-status.html">CPR Status</a>
+    <a href="./sent-fb.html">Send FeecBack</a>
+    <!-- <form id="feedbackForm" onsubmit="event.preventDefault(); submitFeedback();">
         <h1>Send Feedback</h1>
         <div>
             <label for="fromEmail">From (Admin Email):</label>
@@ -248,7 +252,7 @@
             <textarea id="feedbackContent" name="feedbackContent" rows="5" required></textarea>
         </div>
         <button type="submit">Send Feedback</button>
-    </form>
+    </form> -->
 </body>
 
 </html>

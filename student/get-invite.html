@@ -49,7 +49,7 @@
             }
 
             try {
-                const response = await fetch(`http://127.0.0.1:5001/fetch-invitations?student=${studentName}`);
+                const response = await fetch(`https://cpr-csr-managements-1.onrender.com/fetch-invitations?student=${studentName}`);
                 const result = await response.json();
 
                 const invitationsDiv = document.getElementById('invitationList');

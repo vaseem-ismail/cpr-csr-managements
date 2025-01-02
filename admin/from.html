@@ -144,7 +144,7 @@
             const responseMessage = document.getElementById("responseMessage");
 
             try {
-                const response = await fetch("http://127.0.0.1:5000/submit-feedback", {
+                const response = await fetch("https://cpr-csr-managements.onrender.com/submit-feedback", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -178,7 +178,7 @@
             feedbackList.innerHTML = "<p>Loading feedback...</p>";
 
             try {
-                const response = await fetch(`http://127.0.0.1:5000/get-feedback/${senderEmail}`);
+                const response = await fetch(`https://cpr-csr-managements.onrender.com/get-feedback/${senderEmail}`);
                 const data = await response.json();
 
                 feedbackList.innerHTML = ""; // Clear loading message

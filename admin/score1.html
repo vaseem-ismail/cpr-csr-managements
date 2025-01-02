@@ -457,8 +457,8 @@
                 const month = document.getElementById('monthSelect').value;
 
                 const url = month
-                    ? `http://127.0.0.1:5001/get_section_scores?section=${section}&month=${month}`
-                    : `http://127.0.0.1:5001/get_section_scores?section=${section}`;
+                    ? `https://cpr-csr-managements-1.onrender.com/get_section_scores?section=${section}&month=${month}`
+                    : `https://cpr-csr-managements-1.onrender.com/get_section_scores?section=${section}`;
 
                 fetch(url)
                     .then(response => response.json())
@@ -493,7 +493,7 @@
         }
         else if (role === 'Student') {
             // Student UI to view their scores as a bar chart
-            fetch(`http://127.0.0.1:5001/get_student_scores?email=${email}&section=${section}`)
+            fetch(`https://cpr-csr-managements-1.onrender.com/get_student_scores?email=${email}&section=${section}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.scores) {

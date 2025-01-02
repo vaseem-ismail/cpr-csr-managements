@@ -8,4 +8,5 @@ fastapi
 pydantic
 motor
 uvicorn
-python-dateutil           
+python-dateutil  
+timedelta         

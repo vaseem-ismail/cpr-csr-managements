@@ -200,10 +200,13 @@
 
             fetch(`https://cpr-csr-managements-1.onrender.com/book-slot-${section}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    // Additional headers if required
+                },
                 body: JSON.stringify({
                     date,
-                    admin: JSON.parse(localStorage.getItem("user")).name || "Admin",
+                    admin: JSON.parse(localStorage.getItem("user"))?.name || "Admin",
                     student: studentName,
                     role,
                     section,
@@ -211,42 +214,50 @@
             })
                 .then(res => res.json())
                 .then(data => {
-                    alert(data.message || data.error);
-                    closeBookingForm();
-                    loadCalendar(displayedYear, displayedMonth);
+                    console.log("Success:", data);
                 })
-                .catch(err => console.error("Error booking slot:", err));
-        }
+                .catch(err => {
+                    console.error("Error:", err);
+                });
 
-        function openBookingDetails(slotId) {
-            fetch(`https://cpr-csr-managements-1.onrender.com/slot-details/${section}/${slotId}`)
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("detailsContainer").style.display = "block";
-                    document.getElementById("adminName").textContent = `Admin: ${data.admin}`;
-                    document.getElementById("studentNameDetails").textContent = `Student: ${data.student}`;
-                    document.getElementById("bookingDate").textContent = `Date: ${new Date(data.start_time).toLocaleString()}`;
-                    document.getElementById("deleteButton").onclick = () => deleteSlot(slotId);
-                })
-                .catch(err => console.error("Error fetching slot details:", err));
-        }
+            //         .then(res => res.json())
+            //         .then(data => {
+            //             alert(data.message || data.error);
+            //             closeBookingForm();
+            //             loadCalendar(displayedYear, displayedMonth);
+            //         })
+            //         .catch(err => console.error("Error booking slot:", err));
+         }
 
-        function closeDetails() {
-            document.getElementById("detailsContainer").style.display = "none";
-        }
+            function openBookingDetails(slotId) {
+                fetch(`https://cpr-csr-managements-1.onrender.com/slot-details/${section}/${slotId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById("detailsContainer").style.display = "block";
+                        document.getElementById("adminName").textContent = `Admin: ${data.admin}`;
+                        document.getElementById("studentNameDetails").textContent = `Student: ${data.student}`;
+                        document.getElementById("bookingDate").textContent = `Date: ${new Date(data.start_time).toLocaleString()}`;
+                        document.getElementById("deleteButton").onclick = () => deleteSlot(slotId);
+                    })
+                    .catch(err => console.error("Error fetching slot details:", err));
+            }
 
-        function deleteSlot(slotId) {
-            fetch(`https://cpr-csr-managements-1.onrender.com/delete-slot/${section}/${slotId}`, { method: "DELETE" })
-                .then(res => res.json())
-                .then(data => {
-                    alert(data.message || data.error);
-                    closeDetails();
-                    loadCalendar(displayedYear, displayedMonth);
-                })
-                .catch(err => console.error("Error deleting slot:", err));
-        }
+            function closeDetails() {
+                document.getElementById("detailsContainer").style.display = "none";
+            }
 
-        loadCalendar(displayedYear, displayedMonth);
+            function deleteSlot(slotId) {
+                fetch(`https://cpr-csr-managements-1.onrender.com/delete-slot/${section}/${slotId}`, { method: "DELETE" })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.message || data.error);
+                        closeDetails();
+                        loadCalendar(displayedYear, displayedMonth);
+                    })
+                    .catch(err => console.error("Error deleting slot:", err));
+            }
+
+            loadCalendar(displayedYear, displayedMonth);
     </script>
 </body>
 

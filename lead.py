@@ -243,7 +243,7 @@ def get_events(section):
 @app.route("/book-slot/<section>", methods=["POST"])
 def book_slot(section):
     try:
-        if section not in db.list_collection_names():
+        if section not in calenderdb.list_collection_names():
             return jsonify({"error": "Invalid section"}), 404
         
         data = request.json

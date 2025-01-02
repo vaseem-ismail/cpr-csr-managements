@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section Calendar</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #444;
+            margin: 20px 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+        }
+
+        /* Calendar Container */
+        #calendar-container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        #calendar-container select {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 50%;
+            text-align: center;
+        }
+
+        /* Calendar Grid */
+        #calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .day {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f9f9f9;
+            transition: background-color 0.3s ease;
+        }
+
+        .day:hover {
+            background-color: #eef;
+        }
+
+        .day.booked {
+            background-color: #4caf50;
+            color: #fff;
+            font-weight: bold;
+            border-color: #388e3c;
+        }
+
+        .day.booked:hover {
+            background-color: #45a049;
+        }
+
+        /* Modal Styles */
+        #details-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        #modal-content h3 {
+            margin-bottom: 15px;
+            color: #444;
+        }
+
+        #modal-content p {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        #modal-content button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #delete-event-btn {
+            background-color: #f44336;
+            color: #fff;
+        }
+
+        #delete-event-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        #close-modal-btn {
+            background-color: #2196f3;
+            color: #fff;
+        }
+
+        #close-modal-btn:hover {
+            background-color: #1976d2;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            #calendar-container {
+                width: 95%;
+            }
+
+            #calendar {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            #calendar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            #modal-content {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="calendar-container">
+        <h1>Section A Calendar</h1>
+        <select id="student-dropdown">
+            <option value="" disabled selected>Select a Student</option>
+            <option value="John">John</option>
+            <option value="Jane">Jane</option>
+            <option value="Ali">Ali</option>
+        </select>
+        <div id="calendar"></div>
+        <footer>&copy; 2024 Calendar App</footer>
+    </div>
+
+    <div id="details-modal" style="display: none;">
+        <div id="modal-content">
+            <h3>Event Details</h3>
+            <p id="event-details"></p>
+            <button id="delete-event-btn">Delete Event</button>
+            <button id="close-modal-btn">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const section = "a"; // Change this dynamically for other sections
+        const calendar = document.getElementById("calendar");
+        const studentDropdown = document.getElementById("student-dropdown");
+        const modal = document.getElementById("details-modal");
+        const eventDetails = document.getElementById("event-details");
+        const deleteEventBtn = document.getElementById("delete-event-btn");
+        const closeModalBtn = document.getElementById("close-modal-btn");
+        let selectedEventId = null;
+
+        // Load events
+        function loadEvents() {
+            fetch(`http://127.0.0.1:5000/get-events-${section}`)
+                .then(res => res.json())
+                .then(events => {
+                    calendar.innerHTML = ""; // Clear the calendar
+                    events.forEach(event => {
+                        const dayElement = document.createElement("div");
+                        dayElement.className = "day";
+                        dayElement.innerText = new Date(event.start_time).toDateString();
+                        dayElement.classList.add("booked");
+                        dayElement.addEventListener("click", () => showEventDetails(event));
+                        calendar.appendChild(dayElement);
+                    });
+                })
+                .catch(err => console.error("Error loading events:", err));
+        }
+
+        // Show event details
+        function showEventDetails(event) {
+            selectedEventId = event._id;
+            eventDetails.innerHTML = `
+        Admin: ${event.admin}<br>
+        Student: ${event.student}<br>
+        Section: ${event.section}<br>
+        Date: ${new Date(event.start_time).toLocaleString()}
+      `;
+            modal.style.display = "block";
+        }
+
+        // Book slot
+        studentDropdown.addEventListener("change", () => {
+            const studentName = studentDropdown.value;
+            const date = prompt("Enter date in YYYY-MM-DD format:");
+            if (!date) return;
+
+            fetch(`http://127.0.0.1:5000/book-slot-${section}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    date: date,
+                    admin: "Admin Name", // Replace dynamically if needed
+                    student: studentName,
+                    section: section.toUpperCase(),
+                }),
+            })
+                .then(res => res.json())
+                .then(response => {
+                    alert(response.message);
+                    loadEvents();
+                })
+                .catch(err => console.error("Error booking slot:", err));
+        });
+
+        // Delete event
+        deleteEventBtn.addEventListener("click", () => {
+            fetch(`http://127.0.0.1:5000/delete-event-${section}/${selectedEventId}`, {
+                method: "DELETE",
+            })
+                .then(res => res.json())
+                .then(response => {
+                    alert(response.message);
+                    modal.style.display = "none";
+                    loadEvents();
+                })
+                .catch(err => console.error("Error deleting event:", err));
+        });
+
+        // Close modal
+        closeModalBtn.addEventListener("click", () => {
+            modal.style.display = "none";
+        });
+
+        // Initial load
+        loadEvents();
+
+        // Refresh events every second to maintain highlights
+        setInterval(loadEvents, 1000);
+    </script>
+</body>
+
+</html>

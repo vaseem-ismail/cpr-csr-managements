@@ -171,37 +171,37 @@
                 responseMessage.textContent = "An error occurred. Please try again.";
             }
         });
-            // Fetch feedback
-            async function fetchFeedback(senderEmail) {
-                const feedbackList = document.getElementById("feedbackList");
+        // Fetch feedback
+        async function fetchFeedback(senderEmail) {
+            const feedbackList = document.getElementById("feedbackList");
 
-                feedbackList.innerHTML = "<p>Loading feedback...</p>";
+            feedbackList.innerHTML = "<p>Loading feedback...</p>";
 
-                try {
-                    const response = await fetch(`http://127.0.0.1:5000/get-feedback/${senderEmail}`);
-                    const data = await response.json();
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/get-feedback/${senderEmail}`);
+                const data = await response.json();
 
-                    feedbackList.innerHTML = ""; // Clear loading message
+                feedbackList.innerHTML = ""; // Clear loading message
 
-                    if (response.ok) {
-                        data.feedbacks.forEach((feedback) => {
-                            const feedbackItem = document.createElement("div");
-                            feedbackItem.classList.add("feedback-item");
-                            feedbackItem.innerHTML = `
+                if (response.ok) {
+                    data.feedbacks.forEach((feedback) => {
+                        const feedbackItem = document.createElement("div");
+                        feedbackItem.classList.add("feedback-item");
+                        feedbackItem.innerHTML = `
               <p><strong>From:</strong> ${feedback.from}</p>
               <p><strong>To:</strong> ${feedback.to}</p>
               <p><strong>Message:</strong> ${feedback.textcontent}</p>
               <p><small><strong>Timestamp:</strong> ${new Date(feedback.timestamp).toLocaleString()}</small></p>
             `;
-                            feedbackList.appendChild(feedbackItem);
-                        });
-                    } else {
-                        feedbackList.innerHTML = "<p>No feedback found.</p>";
-                    }
-                } catch (error) {
-                    feedbackList.innerHTML = "<p>An error occurred while fetching feedback.</p>";
+                        feedbackList.appendChild(feedbackItem);
+                    });
+                } else {
+                    feedbackList.innerHTML = "<p>No feedback found.</p>";
                 }
+            } catch (error) {
+                feedbackList.innerHTML = "<p>An error occurred while fetching feedback.</p>";
             }
+        }
     </script>
 </body>
 

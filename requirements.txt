@@ -4,3 +4,7 @@ flask-jwt-extended
 pymongo
 gunicorn
 Flask-CORS
+fastapi
+pydantic
+motor
+uvicorn

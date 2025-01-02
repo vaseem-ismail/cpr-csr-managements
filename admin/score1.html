@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Scores System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* General Body Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f7fa;
+            color: #333;
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+
+        /* Headers */
+        h1,
+        h2 {
+            text-align: center;
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            color: #007BFF;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: #495057;
+        }
+
+        /* Form Elements */
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus,
+        button:focus {
+            border-color: #007BFF;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        input:hover,
+        select:hover {
+            background-color: #f9f9ff;
+        }
+
+        /* Button Styling */
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        #fetchButton {
+            display: block;
+            width: auto;
+            padding: 10px 20px;
+            margin: 20px auto;
+            text-align: center;
+            background-color: #28a745;
+            color: white;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        #fetchButton:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+            transition: transform 0.2s ease;
+        }
+
+        /* Card Layout */
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        table thead {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        table th,
+        table td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        table th {
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        table tbody tr:hover {
+            background-color: #e9ecef;
+            cursor: pointer;
+            transform: scale(1.02);
+            transition: transform 0.2s ease;
+        }
+
+        /* Notifications */
+        #adminMessage {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Lead Specific Styling */
+        #scoresTable {
+            margin-top: 20px;
+        }
+
+        /* Lead Specific Styling */
+        .lead-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .lead-container h2 {
+            margin-bottom: 20px;
+            color: #495057;
+        }
+
+        /* Scores Section */
+        .scores-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 20px;
+        }
+
+        .score-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .score-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Title for each score */
+        .score-card h3 {
+            font-size: 1.5rem;
+            color: #007BFF;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .score-bar {
+            height: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        /* Different Colors for Each Score */
+        .score-english {
+            background-color: rgba(255, 99, 132, 0.2);
+            border: 1px solid rgba(255, 99, 132, 1);
+        }
+
+        .score-life-skills {
+            background-color: rgba(54, 162, 235, 0.2);
+            border: 1px solid rgba(54, 162, 235, 1);
+        }
+
+        .score-tech {
+            background-color: rgba(75, 192, 192, 0.2);
+            border: 1px solid rgba(75, 192, 192, 1);
+        }
+
+        .score-problem-solving {
+            background-color: rgba(153, 102, 255, 0.2);
+            border: 1px solid rgba(153, 102, 255, 1);
+        }
+
+        .score-self-learning {
+            background-color: rgba(255, 159, 64, 0.2);
+            border: 1px solid rgba(255, 159, 64, 1);
+        }
+
+        .score-behaviour {
+            background-color: rgba(255, 205, 86, 0.2);
+            border: 1px solid rgba(255, 205, 86, 1);
+        }
+
+        /* Labels below each score bar */
+        .score-label {
+            font-size: 1.2rem;
+            text-align: center;
+            color: #495057;
+        }
+
+        /* Button for fetching scores */
+        #fetchButton {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 24px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: block;
+            margin-top: 20px;
+        }
+
+        #fetchButton:hover {
+            background-color: #218838;
+        }
+
+        /* Flexbox for student name display below the graph */
+        .student-name {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #007BFF;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            h2 {
+                font-size: 1.6rem;
+            }
+
+            input,
+            select,
+            button,
+            table th,
+            table td {
+                font-size: 0.9rem;
+            }
+
+            button {
+                padding: 10px;
+            }
+        }
+
+        /* Canvas Styling for Chart */
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .scores-section {
+            grid-template-columns: 1fr;
+        }
+
+        .score-card h3 {
+            font-size: 1.3rem;
+        }
+
+        .score-label {
+            font-size: 1rem;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <h1>Student Scores System</h1>
+    <div id="content"></div>
+
+    <script>
+        const role = JSON.parse(localStorage.getItem('user')).role; // "admin", "lead", or "student"
+        const section = JSON.parse(localStorage.getItem('user')).section; // "A", "B", "C"
+        const email = JSON.parse(localStorage.getItem('user')).email; // For student
+
+        const contentDiv = document.getElementById('content');
+
+        if (role === 'Admin') {
+            // Admin UI to add scores
+            contentDiv.innerHTML = `
+        <h2>Admin: Add Student Scores</h2>
+        <form id="adminForm">
+            <label for="studentEmail">Student Email:</label>
+            <input type="email" id="studentEmail" placeholder="Enter student's email" required>
+            
+            <label for="englishScore">English:</label>
+            <input type="number" id="englishScore" placeholder="Enter score for English" min="0" max="100" required>
+
+            <label for="lifeSkillsScore">Life Skills:</label>
+            <input type="number" id="lifeSkillsScore" placeholder="Enter score for Life Skills" min="0" max="100" required>
+
+            <label for="techScore">Tech:</label>
+            <input type="number" id="techScore" placeholder="Enter score for Tech" min="0" max="100" required>
+
+            <label for="problemSolvingScore">Problem Solving:</label>
+            <input type="number" id="problemSolvingScore" placeholder="Enter score for Problem Solving" min="0" max="100" required>
+
+            <label for="selfLearningScore">Self-Learning:</label>
+            <input type="number" id="selfLearningScore" placeholder="Enter score for Self-Learning" min="0" max="100" required>
+
+            <label for="behaviourScore">Behaviour:</label>
+            <input type="number" id="behaviourScore" placeholder="Enter score for Behaviour" min="0" max="100" required>
+
+            <button type="submit">Submit Scores</button>
+        </form>
+        <div id="adminMessage"></div>
+    `;
+
+            document.getElementById('adminForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const studentEmail = document.getElementById('studentEmail').value;
+                const englishScore = parseInt(document.getElementById('englishScore').value, 10);
+                const lifeSkillsScore = parseInt(document.getElementById('lifeSkillsScore').value, 10);
+                const techScore = parseInt(document.getElementById('techScore').value, 10);
+                const problemSolvingScore = parseInt(document.getElementById('problemSolvingScore').value, 10);
+                const selfLearningScore = parseInt(document.getElementById('selfLearningScore').value, 10);
+                const behaviourScore = parseInt(document.getElementById('behaviourScore').value, 10);
+
+                const scores = [
+                    englishScore,
+                    lifeSkillsScore,
+                    techScore,
+                    problemSolvingScore,
+                    selfLearningScore,
+                    behaviourScore,
+                ];
+
+                const response = await fetch('http://127.0.0.1:5001/add_scores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: studentEmail, scores, section }),
+                });
+
+                const result = await response.json();
+                document.getElementById('adminMessage').innerText = result.message || result.error;
+            });
+        }
+        else if (role === 'Lead') {
+            // Lead UI to fetch student scores dynamically by section
+            contentDiv.innerHTML = `
+        <h2>Lead: View Scores</h2>
+        <label for="sectionSelect">Choose Section:</label>
+        <select id="sectionSelect">
+            <option value="A">Section A</option>
+            <option value="B">Section B</option>
+            <option value="C">Section C</option>
+        </select>
+
+        <label for="monthSelect">Filter by Month:</label>
+        <select id="monthSelect">
+            <option value="">All Months</option>
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+        </select>
+
+        <button id="fetchButton">Fetch Scores</button>
+        <div id="scoresTable"></div>
+    `;
+
+            document.getElementById('fetchButton').addEventListener('click', () => {
+                const section = document.getElementById('sectionSelect').value;
+                const month = document.getElementById('monthSelect').value;
+
+                const url = month
+                    ? `http://127.0.0.1:5001/get_section_scores?section=${section}&month=${month}`
+                    : `http://127.0.0.1:5001/get_section_scores?section=${section}`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const scoresDiv = document.getElementById('scoresTable');
+                        if (data.scores) {
+                            const table = `
+                        <table>
+                            <thead>
+                                <tr><th>Student Email</th><th>Scores</th><th>Month</th></tr>
+                            </thead>
+                            <tbody>
+                                ${data.scores.map(student => `
+                                    <tr>
+                                        <td>${student.email}</td>
+                                        <td>${student.scores.join(', ')}</td>
+                                        <td>${student.month}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                            scoresDiv.innerHTML = table;
+                        } else {
+                            scoresDiv.innerHTML = `<p>${data.message}</p>`;
+                        }
+                    })
+                    .catch(err => {
+                        document.getElementById('scoresTable').innerHTML = `<p>Error fetching data: ${err.message}</p>`;
+                    });
+            });
+        }
+        else if (role === 'Student') {
+            // Student UI to view their scores as a bar chart
+            fetch(`http://127.0.0.1:5001/get_student_scores?email=${email}&section=${section}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.scores) {
+                        const ctx = document.createElement('canvas');
+                        contentDiv.appendChild(ctx);
+
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['English', 'Life Skills', 'Tech', 'Problem Solving', 'Self Learning', 'Behaviour'],
+                                datasets: [{
+                                    label: 'Scores',
+                                    data: data.scores,
+                                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1,
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    y: { beginAtZero: true },
+                                }
+                            }
+                        });
+                    } else {
+                        contentDiv.innerHTML = `<p>${data.message}</p>`;
+                    }
+                })
+                .catch(err => {
+                    contentDiv.innerHTML = `<p>Error fetching scores: ${err.message}</p>`;
+                });
+        } else {
+            contentDiv.innerHTML = `<p>Invalid role. Please set your role as "admin", "lead", or "student" in localStorage.</p>`;
+        }
+    </script>
+</body>
+
+</html>

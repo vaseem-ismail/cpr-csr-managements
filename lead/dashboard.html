@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        header {
+            background-color: #0061e0;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: white;
+        }
+        main {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 columns */
+            gap: 50px; /* Space between the divs */
+            justify-content: center;
+            margin-left: 140px;
+            margin-top: 130px;
+        }
+        .card {
+            padding: 20px;
+            background-color:  #e3f2fd;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 250px; /* Equal width */
+            height: 150px; /* Equal height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: scale(1.05);
+        }
+        .card a {
+            text-decoration: none;
+            color: inherit;
+            font-size: 25px;
+            font-weight: bolder;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 id="head"></h1>
+    </header>
+    <main>
+        <div class="card">
+            <a href="./lead.html">CPR Completion Status</a>
+        </div>
+        <div class="card">
+            <a href="./goals.html">See your Goals</a>
+        </div>
+        <div class="card">
+            <a href="./track_progress.html">Track Progres</a>
+        </div>
+        <div class="card">
+            <a href="./dcfb.html">Discussion Feedback</a>
+        </div>
+        <div class="card">
+            <a href="./scores.html">Scores</a>
+        </div>
+       
+        <!-- <div class="card">
+            <a href="./feedback.html">Feedback CPR Pointer</a>
+        </div> -->
+       
+       
+       
+    </main>
+    <script>
+        const h1=document.getElementById("head");
+        window.addEventListener("load",()=>{
+            h1.textContent=JSON.parse(localStorage.getItem("user")).name
+        })
+
+
+    </script>
+</body>
+</html>

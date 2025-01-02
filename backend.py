@@ -21,6 +21,12 @@ mongo_client = MongoClient(MONGO_URI)
 db = mongo_client['CPR-Details']
 users_collection = db['Users']
 
+#index.html
+#from.html
+#sent-fb.html
+#feedback.html
+#admin.html
+
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -88,6 +94,7 @@ def profile():
         'message': 'User profile fetched successfully.'
     }), 200
 
+#FeedBack System
 @app.route('/submit-feedback', methods=['POST'])
 def submit_feedback():
     try:
@@ -169,6 +176,8 @@ def get_feedbacks():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
 
 # Main entry point
 if __name__ == '__main__':

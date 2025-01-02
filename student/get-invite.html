@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Invitations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        #invitations {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .invitation {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .invitation:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="invitations">
+        <h2>Your Invitations</h2>
+        <div id="invitationList"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Fetch student name from localStorage
+            const studentName = JSON.parse(localStorage.getItem('user')).name;
+
+            if (!studentName) {
+                alert('Student name not found in localStorage!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://127.0.0.1:5001/fetch-invitations?student=${studentName}`);
+                const result = await response.json();
+
+                const invitationsDiv = document.getElementById('invitationList');
+                invitationsDiv.innerHTML = '';
+
+                if (result.success && result.invitations.length > 0) {
+                    result.invitations.forEach(invitation => {
+                        const div = document.createElement('div');
+                        div.className = 'invitation';
+                        div.innerHTML = `
+                            <p>Date: ${invitation.date}</p>
+                            <p>Details: ${invitation.details}</p>
+                            <p>Coach: ${invitation.admin}</p>
+                        `;
+                        invitationsDiv.appendChild(div);
+                    });
+                } else {
+                    invitationsDiv.innerHTML = '<p>No invitations found!</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching invitations:', error);
+                alert('An error occurred while fetching your invitations.');
+            }
+        });
+    </script>
+</body>
+</html>

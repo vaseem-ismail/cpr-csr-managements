@@ -70,7 +70,7 @@ const studentData = JSON.parse(localStorage.getItem("user"));
 
 if (!studentData || studentData.role !== "Student") {
   alert("Unauthorized access! Redirecting to login page.");
-  window.location.href = "index.html";
+  window.location.href = "../index.html";
 } else {
   // Populate student details
   document.getElementById("studentName").textContent = studentData.name;
@@ -82,7 +82,7 @@ if (!studentData || studentData.role !== "Student") {
 function logout() {
   // Clear user data from localStorage and redirect to login
   localStorage.removeItem("user");
-  window.location.href = "index.html";
+  window.location.href = "../index.html";
 }
 
   </script>

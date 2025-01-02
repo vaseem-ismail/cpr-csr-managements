@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Booking Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        h1 {
+            margin: 10px 0;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            width: 90%;
+            max-width: 1200px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .day {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            font-size: 16px;
+            height: 70px;
+        }
+
+        .day.highlighted {
+            background-color: #ffcc00;
+        }
+
+        .booking-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .booking-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .booking-form button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        #detailsContainer {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #detailsContainer p {
+            margin: 5px 0;
+        }
+
+        #detailsContainer button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="monthDisplay">January 2024</h1>
+    <div class="calendar" id="calendar"></div>
+
+    <!-- Booking Form -->
+    <div id="booking-form" class="booking-form">
+        <h2>Book Slot</h2>
+        <p id="selectedDate"></p>
+        <input type="text" id="studentName" placeholder="Enter Student Name" />
+        <button id="bookButton">Book Slot</button>
+        <button onclick="closeBookingForm()">Cancel</button>
+    </div>
+
+    <!-- Slot Details -->
+    <div id="detailsContainer">
+        <h2>Slot Details</h2>
+        <p id="adminName"></p>
+        <p id="studentNameDetails"></p>
+        <p id="bookingDate"></p>
+        <button id="deleteButton">Delete Slot</button>
+        <button onclick="closeDetails()">Close</button>
+    </div>
+
+    <script>
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const section = JSON.parse(localStorage.getItem("user")).section; // Default section if not in localStorage
+        const role = JSON.parse(localStorage.getItem("user")).role; // Default role if not in localStorage
+        const calendar = document.getElementById("calendar");
+
+        // Function to load the calendar for a given month and year
+        function loadCalendar(year, month) {
+            const monthDisplay = document.getElementById("monthDisplay");
+            calendar.innerHTML = "";
+            const firstDay = new Date(year, month, 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            monthDisplay.innerText = `${firstDay.toLocaleString('default', { month: 'long' })} ${year}`;
+
+            // Loop through the days of the month and create day elements
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDiv = document.createElement("div");
+                dayDiv.classList.add("day");
+                dayDiv.dataset.date = `${month + 1}-${day}-${year}`;
+                dayDiv.innerText = day;
+                dayDiv.onclick = () => openBookingForm(dayDiv.dataset.date); // Event binding for openBookingForm
+
+                // Check if the slot is booked, and add a highlight
+                fetch(`http://127.0.0.1:5000/get-events-${section.toLowerCase()}`)
+                    .then(res => res.json())
+                    .then(events => {
+                        events.forEach(event => {
+                            const eventDate = new Date(event.start_time);
+                            const eventDateStr = `${eventDate.getMonth() + 1}-${eventDate.getDate()}-${eventDate.getFullYear()}`;
+                            if (dayDiv.dataset.date === eventDateStr) {
+                                dayDiv.classList.add("highlighted");
+                                dayDiv.onclick = () => openBookingDetails(event._id); // Open details if clicked
+                            }
+                        });
+                    })
+                    .catch(err => console.error("Error fetching events:", err));
+
+                calendar.appendChild(dayDiv);
+            }
+        }
+
+        // Function to open the booking form when a date is clicked
+        function openBookingForm(date) {
+            console.log("Date clicked:", date); // Debug log
+            document.getElementById("booking-form").style.display = "block";
+            document.getElementById("selectedDate").innerText = `Selected Date: ${date}`;
+            document.getElementById("bookButton").onclick = () => submitBookingForm(date);
+        }
+
+        // Function to close the booking form
+        function closeBookingForm() {
+            document.getElementById("booking-form").style.display = "none";
+        }
+
+        // Submit the booking form
+        function submitBookingForm(date) {
+            const studentName = document.getElementById("studentName").value.trim();
+            if (!studentName) {
+                alert("Please enter the student's name.");
+                return;
+            }
+
+            fetch(`http://127.0.0.1:5000/book-slot-${section.toLowerCase()}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    date,
+                    admin: JSON.parse(localStorage.getItem("user")).name, // Replace with actual admin name
+                    student: studentName,
+                    role,
+                    section,
+                }),
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                    closeBookingForm();
+                    loadCalendar(currentYear, currentMonth);
+                })
+                .catch(err => console.error(err));
+        }
+
+        function openBookingDetails(slotId) {
+            fetch(`http://127.0.0.1:5000/slot-details/${section.toLowerCase()}/${slotId}`)
+                .then(res => res.json())
+                .then(data => {
+                    console.log("Slot details fetched:", data); // Debugging log
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    document.getElementById("detailsContainer").style.display = "block";
+                    document.getElementById("adminName").innerText = `Admin: ${data.admin || "N/A"}`;
+                    document.getElementById("studentNameDetails").innerText = `Student: ${data.student || "N/A"}`;
+                    document.getElementById("bookingDate").innerText = `Date: ${data.start_time ? new Date(data.start_time).toLocaleString() : "N/A"
+                        }`;
+                    document.getElementById("deleteButton").onclick = () => deleteSlot(slotId);
+                })
+                .catch(err => console.error("Error fetching slot details:", err));
+        }
+
+        function deleteSlot(slotId) {
+            fetch(`http://127.0.0.1:5000/delete-slot-${section.toLowerCase()}/${slotId}`, {
+                method: "DELETE",
+            })
+                .then(res => res.json())
+                .then(data => {
+                    console.log("Delete response:", data); // Debugging log
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    alert(data.message);
+                    closeDetails();
+                    loadCalendar(currentYear, currentMonth);
+                })
+                .catch(err => console.error("Error deleting slot:", err));
+        }
+
+
+
+        // Function to close the slot details modal
+        function closeDetails() {
+            document.getElementById("detailsContainer").style.display = "none";
+        }
+
+        loadCalendar(currentYear, currentMonth);  // Load the current month when the page loads
+    </script>
+</body>
+
+</html>

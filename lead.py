@@ -240,36 +240,38 @@ def get_events(section):
 
 
 # Book a slot for a specific section
-@app.route("/book-slot-<section>", methods=["POST"])
+@app.route("/book-slot/<section>", methods=["POST"])
 def book_slot(section):
-    data = request.json
-    required_fields = ["date", "admin", "student", "role", "section"]
-    if not all(field in data for field in required_fields):
-        return jsonify({"error": "Invalid event data"}), 400
-
     try:
-        date_obj = parser.parse(data["date"])
-    except ValueError:
-        return jsonify({"error": "Invalid datetime format"}), 400
+        if section not in db.list_collection_names():
+            return jsonify({"error": "Invalid section"}), 404
+        
+        data = request.json
+        if not data:
+            return jsonify({"error": "Invalid request payload"}), 400
+        
+        student = data.get("student")
+        admin = data.get("admin")
+        role = data.get("role")
+        section = data.get("section")
+        date = data.get("date")
 
-    event_data = {
-        "start_time": date_obj,
-        "end_time": date_obj + datetime.timedelta(hours=1),
-        "admin": data["admin"],
-        "student": data["student"],
-        "role": data["role"],
-        "section": data["section"]
-    }
+        if not all([student, admin, role, section, date]):
+            return jsonify({"error": "Missing required fields"}), 400
 
-    existing_event = calenderdb[section].find_one({
-        "start_time": {"$lt": date_obj + datetime.timedelta(hours=1)},
-        "end_time": {"$gt": date_obj}
-    })
-    if existing_event:
-        return jsonify({"error": "Slot already booked"}), 400
+        slot = {
+            "student": student,
+            "admin": admin,
+            "role": role,
+            "section": section,
+            "start_time": date,
+        }
+        db[section].insert_one(slot)
+        return jsonify({"message": "Slot booked successfully"}), 201
 
-    calenderdb[section].insert_one(event_data)
-    return jsonify({"message": "Slot booked successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route("/slot-details/<section>/<slot_id>", methods=["GET"])
 def slot_details(section, slot_id):

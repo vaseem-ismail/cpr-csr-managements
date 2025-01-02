@@ -12,20 +12,19 @@ CORS(app)
 
 # MongoDB connection
 client = MongoClient("mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/")
-DB_NAME = "Slot-Book"
-calenderdb = client[DB_NAME]
+calenderdb = client["Slot-Book"]
 db = client['CPR-Status']
 scoredb = client["Scores"]
 invitedb = client['Slot_Booking']  # Replace with your database name
 
 
-# MongoDB connection for both databases
-student_client = MongoClient('mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/')  # Student database
-status_client = MongoClient('mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/')  # Status database
+## MongoDB connection for both databases
+#student_client = MongoClient('mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/')  # Student database
+#status_client = MongoClient('mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/')  # Status database
 
 # Databases
-student_db = student_client['CPR-Details']  # Replace with your student database name
-status_db = status_client['CPR-Status']  # Replace with your status database name
+student_db = client['CPR-Details']  # Replace with your student database name
+status_db = client['CPR-Status']  # Replace with your status database name
 
 # Collections
 students_collection = student_db['Users']  # Students collection
@@ -232,70 +231,82 @@ def serialize_event(event):
 # Get events for a specific section
 @app.route("/get-events-<section>", methods=["GET"])
 def get_events(section):
-    if section not in calenderdb.list_collection_names():
-        return jsonify([])  # Return an empty array for invalid sections
-    events_collection = calenderdb[section]
-    events = events_collection.find()
-    return jsonify([serialize_event(event) for event in events])  # Always return an array
+    try:
+        if section not in calenderdb.list_collection_names():
+            return jsonify([])  # Return an empty array for invalid sections
+        events_collection = calenderdb[section]
+        events = events_collection.find()
+        return jsonify([serialize_event(event) for event in events])  # Always return an array
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Book a slot for a specific section
 @app.route("/book-slot-<section>", methods=["POST"])
 def book_slot(section):
     data = request.json
     required_fields = ["date", "time", "admin", "student", "role", "section"]
+
     if not all(field in data for field in required_fields):
-        return jsonify({"error": "Invalid event data"}), 400
+        return jsonify({"error": "Invalid event data, required fields are missing"}), 400
 
     try:
+        # Parse date and time
         date_time_str = f"{data['date']} {data['time']}"
-        start_time = parser.parse(date_time_str)
+        date_obj = datetime.strptime(date_time_str, "%Y-%m-%d %H:%M")
     except ValueError:
-        return jsonify({"error": "Invalid datetime format"}), 400
+        return jsonify({"error": "Invalid datetime format, use YYYY-MM-DD and HH:MM"}), 400
 
-    end_time = start_time + timedelta(hours=1)  # Slot duration: 1 hour
+    try:
+        event_data = {
+            "start_time": date_obj,
+            "end_time": date_obj + timedelta(hours=1),
+            "admin": data["admin"],
+            "student": data["student"],
+            "role": data["role"],
+            "section": data["section"]
+        }
 
-    event_data = {
-        "start_time": start_time,
-        "end_time": end_time,
-        "admin": data["admin"],
-        "student": data["student"],
-        "role": data["role"],
-        "section": data["section"]
-    }
+        # Check if slot already exists
+        existing_event = calenderdb[section].find_one({
+            "start_time": {"$lt": date_obj + timedelta(hours=1)},
+            "end_time": {"$gt": date_obj}
+        })
+        if existing_event:
+            return jsonify({"error": "Slot already booked"}), 400
 
-    existing_event = calenderdb[section].find_one({
-        "start_time": {"$lt": end_time},
-        "end_time": {"$gt": start_time}
-    })
-    if existing_event:
-        return jsonify({"error": "Slot already booked"}), 400
+        calenderdb[section].insert_one(event_data)
+        return jsonify({"message": "Slot booked successfully"}), 201
 
-    calenderdb[section].insert_one(event_data)
-    return jsonify({"message": "Slot booked successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-# Fetch slot details
+# Get details of a specific slot
 @app.route("/slot-details/<section>/<slot_id>", methods=["GET"])
 def slot_details(section, slot_id):
-    if section not in calenderdb.list_collection_names():
-        return jsonify({"error": "Invalid section"}), 404
     try:
+        if section not in calenderdb.list_collection_names():
+            return jsonify({"error": "Invalid section"}), 404
+
         slot = calenderdb[section].find_one({"_id": ObjectId(slot_id)})
         if not slot:
             return jsonify({"error": "Slot not found"}), 404
         return jsonify(serialize_event(slot))
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Delete a slot
+# Delete a specific slot
 @app.route("/delete-slot/<section>/<slot_id>", methods=["DELETE"])
 def delete_slot(section, slot_id):
-    if section not in calenderdb.list_collection_names():
-        return jsonify({"error": f"Invalid section: {section}"}), 404
     try:
+        if section not in calenderdb.list_collection_names():
+            return jsonify({"error": f"Invalid section: {section}"}), 404
+
         result = calenderdb[section].delete_one({"_id": ObjectId(slot_id)})
         if result.deleted_count == 0:
             return jsonify({"error": f"Slot with ID {slot_id} not found"}), 404
         return jsonify({"message": "Slot deleted successfully"}), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -307,7 +318,6 @@ def not_found_error(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return jsonify({"error": "An internal server error occurred"}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True)

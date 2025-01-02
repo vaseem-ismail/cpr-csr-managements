@@ -2,8 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from dateutil import parser
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)
@@ -35,21 +34,22 @@ def get_events(section):
 @app.route("/book-slot-<section>", methods=["POST"])
 def book_slot(section):
     data = request.json
-    required_fields = ["date", "admin", "student", "role", "section"]
+    required_fields = ["date", "time", "admin", "student", "role", "section"]
 
     if not all(field in data for field in required_fields):
         return jsonify({"error": "Invalid event data, required fields are missing"}), 400
 
     try:
-        # Parse date
-        date_obj = parser.parse(data["date"])
+        # Parse date and time
+        date_time_str = f"{data['date']} {data['time']}"
+        date_obj = datetime.strptime(date_time_str, "%Y-%m-%d %H:%M")
     except ValueError:
-        return jsonify({"error": "Invalid datetime format, use a proper format"}), 400
+        return jsonify({"error": "Invalid datetime format, use YYYY-MM-DD and HH:MM"}), 400
 
     try:
         event_data = {
             "start_time": date_obj,
-            "end_time": date_obj + datetime.timedelta(hours=1),
+            "end_time": date_obj + timedelta(hours=1),
             "admin": data["admin"],
             "student": data["student"],
             "role": data["role"],
@@ -58,7 +58,7 @@ def book_slot(section):
 
         # Check if slot already exists
         existing_event = calenderdb[section].find_one({
-            "start_time": {"$lt": date_obj + datetime.timedelta(hours=1)},
+            "start_time": {"$lt": date_obj + timedelta(hours=1)},
             "end_time": {"$gt": date_obj}
         })
         if existing_event:

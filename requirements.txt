@@ -8,3 +8,5 @@ fastapi
 pydantic
 motor
 uvicorn
+python-dateutil  
+bson              

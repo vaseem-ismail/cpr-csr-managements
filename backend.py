@@ -43,7 +43,7 @@ def register():
     if users_collection.find_one({'email': email}):
         return jsonify({'error': 'Email already exists'}), 400
 
-    # Save the user details with plain-text password (not recommended for production)
+    # Save the user details
     user_id = users_collection.insert_one({
         'name': name,
         'email': email,
@@ -53,6 +53,39 @@ def register():
     }).inserted_id
 
     return jsonify({'message': 'User registered successfully', 'user_id': str(user_id)}), 201
+
+@app.route('/change-password', methods=['POST'])
+def change_password():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+
+        if not email or not current_password or not new_password:
+            return jsonify({'error': 'Email, current password, and new password are required'}), 400
+
+        # Fetch user by email
+        user = users_collection.find_one({'email': email})
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Verify current password
+        if user['password'] != current_password:  # No hashing as per your request
+            return jsonify({'error': 'Current password is incorrect'}), 401
+
+        # Update the password in the database
+        users_collection.update_one(
+            {'email': email},
+            {'$set': {'password': new_password}}
+        )
+
+        return jsonify({'message': 'Password updated successfully'}), 200
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': 'An internal error occurred'}), 500
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -75,6 +108,24 @@ def login():
         'role': user['role'],
         'section': user['section']
     }), 200
+    
+@app.route('/delete_user', methods=['DELETE'])
+def delete_user():
+    data = request.get_json()
+    email = data.get('email')
+
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+
+    # Find and delete the user by email
+    user = users_collection.find_one({'email': email})
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    users_collection.delete_one({'email': email})
+
+    return jsonify({'message': 'User deleted successfully'}), 200
+
 
 
 

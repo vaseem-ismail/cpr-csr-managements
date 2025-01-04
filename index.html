@@ -1,124 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .login-container {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 400px;
-        }
-        .login-container h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #343a40;
-        }
-        .login-container input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        .login-container button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .login-container button:hover {
-            background-color: #0056b3;
-        }
-        #loginMessage {
-            color: red;
-            text-align: center;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <h2>Login</h2>
-        <p id="loginMessage"></p>
 
-        <form id="loginForm">
-            <input type="email" id="loginEmail" placeholder="Enter your email" required />
-            <input type="password" id="loginPassword" placeholder="Enter your password" required />
-            <button type="submit">Login</button>
-        </form>
-        
-    </div>
-    <script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .login-container {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #343a40;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background-color: #007bff;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .login-container button:hover {
+      background-color: #0056b3;
+    }
+
+    #loginMessage {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    #loader {
+      display: inline-block;
+      width: 80px;
+      height: 80px;
+      position: relative;
+      display: none;
+    }
+
+    #loader div {
+      box-sizing: border-box;
+      display: block;
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      margin: 8px;
+      border: 8px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      border-color: #3498db transparent transparent transparent;
+    }
+
+    #loader div:nth-child(1) {
+      animation-delay: -0.45s;
+    }
+
+    #loader div:nth-child(2) {
+      animation-delay: -0.3s;
+    }
+
+    #loader div:nth-child(3) {
+      animation-delay: -0.15s;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    #loading-text {
+      margin-top: 40px;
+      font-size: 18px;
+      color: #333;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loader">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  <div id="loading-text">Loading...</div>
+  <div class="login-container">
+    <h2>Login</h2>
+    <p id="loginMessage"></p>
+
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Enter your email" required />
+      <input type="password" id="loginPassword" placeholder="Enter your password" required />
+      <button type="submit">Login</button>
+    </form>
+
+  </div>
+  <script>
     document.addEventListener("DOMContentLoaded", () => {
-        const loginForm = document.getElementById("loginForm");
-        const loginMessage = document.getElementById("loginMessage");
-      
-        const API_URL = "https://cpr-csr-managements.onrender.com";
-      
-        loginForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-      
-          const email = document.getElementById("loginEmail").value;
-          const password = document.getElementById("loginPassword").value;
-      
-          try {
-            const response = await fetch(`${API_URL}/login`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, password }),
-            });
-      
-            const data = await response.json();
-      
-            if (response.ok) {
-              loginMessage.style.color = "green";
-              loginMessage.textContent = `Login successful!`;
-      
-              // Store the user data in localStorage
-              localStorage.setItem("user", JSON.stringify(data));
-      
-              if (data.role === "Student") {
-                window.location.href = "./student/student.html";
-              } else if (data.role === "Admin") {
-                window.location.href = "./admin/admin.html";
-              } else if (data.role === "Lead") {
-                window.location.href = "./lead/lead.html";
-              } else {
-                alert("Unknown role. Please contact the administrator.");
-              }
+      const loginForm = document.getElementById("loginForm");
+      const loginMessage = document.getElementById("loginMessage");
+      const loader = document.getElementById("loader");
+      const loadingText = document.getElementById("loading-text");
+
+      const API_URL = "https://cpr-csr-managements.onrender.com";
+
+      loginForm.addEventListener("submit", async (e) => {
+
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('loading-text').style.display = 'block';
+
+        e.preventDefault();
+
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+
+        try {
+          const response = await fetch(`${API_URL}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            loginMessage.style.color = "green";
+            loginMessage.textContent = `Login successful!`;
+
+            // Store the user data in localStorage
+            localStorage.setItem("user", JSON.stringify(data));
+
+            if (data.role === "Student") {
+              window.location.href = "./student/student.html";
+            } else if (data.role === "Admin") {
+              window.location.href = "./admin/admin.html";
+            } else if (data.role === "Lead") {
+              window.location.href = "./lead/lead.html";
             } else {
-              loginMessage.style.color = "red";
-              loginMessage.textContent = data.error || "Login failed!";
+              alert("Unknown role. Please contact the administrator.");
             }
-          } catch (error) {
-            console.error("Login error:", error);
+          } else {
             loginMessage.style.color = "red";
-            loginMessage.textContent = "Network error. Please try again later.";
+            loginMessage.textContent = data.error || "Login failed!";
           }
-        });
+        } catch (error) {
+          console.error("Login error:", error);
+          loginMessage.style.color = "red";
+          loginMessage.textContent = "Network error. Please try again later.";
+        }
       });
-</script>      
-      
-    
+    });
+
+
+  </script>
+
+
 </body>
+
 </html>

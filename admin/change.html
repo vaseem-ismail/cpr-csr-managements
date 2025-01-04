@@ -1,0 +1,183 @@
+<!-- change-pass.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Password</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom right, #f9f9f9, #eaecef);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Form Container */
+        .form-container {
+            background: #fff;
+            padding: 25px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .form-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-container input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .form-container input:focus {
+            border-color: #61a5ff;
+            outline: none;
+            box-shadow: 0 0 8px rgba(97, 165, 255, 0.3);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #61a5ff;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease-in-out, transform 0.2s;
+        }
+
+        .btn:hover {
+            background: #4d91e7;
+            transform: translateY(-2px);
+        }
+
+        #message {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        #message.success {
+            color: #28a745;
+        }
+
+        #message.error {
+            color: #dc3545;
+        }
+
+        /* Subtle Decorative Background */
+        body::before {
+            content: "";
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(97, 165, 255, 0.1);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        body::after {
+            content: "";
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background: rgba(97, 165, 255, 0.2);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .form-container {
+                padding: 20px;
+            }
+
+            .btn {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <h2>Change Password</h2>
+        <form id="change-pass-form">
+            <label for="current-password">Current Password</label>
+            <input type="password" id="current-password" placeholder="Enter current password" required>
+
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" placeholder="Enter new password" required>
+
+            <button type="submit" class="btn">Change Password</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        document.getElementById('change-pass-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const email = JSON.parse(localStorage.getItem('user')).email; // Retrieve email from local storage
+            if (!email) {
+                document.getElementById('message').textContent = 'Email not found in local storage.';
+                document.getElementById('message').classList.add('error');
+                return;
+            }
+
+            const response = await fetch('http://127.0.0.1:5000/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email, // Use email from local storage
+                    current_password: document.getElementById('current-password').value,
+                    new_password: document.getElementById('new-password').value,
+                }),
+            });
+
+            const result = await response.json();
+            const messageElement = document.getElementById('message');
+            if (response.ok) {
+                messageElement.textContent = result.message;
+                messageElement.classList.add('success');
+            } else {
+                messageElement.textContent = result.error;
+                messageElement.classList.add('error');
+            }
+        });
+    </script>
+</body>
+
+</html>

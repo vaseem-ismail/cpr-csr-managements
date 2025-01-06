@@ -1,79 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Invitations</title>
+    <title>Student Slot Requests</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             background-color: #f4f4f9;
+            color: #333;
         }
 
-        #invitations {
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
             max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            width: 90%;
             text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
         }
 
-        .invitation {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
+        h1 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 15px;
         }
 
-        .invitation:last-child {
-            border-bottom: none;
+        p {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .details, .slot-card {
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            margin: 20px 0;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            text-align: left;
+        }
+
+        .details p, .slot-card p {
+            font-size: 1rem;
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: #2575fc;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background-color: #0056d6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            p {
+                font-size: 0.9rem;
+            }
+
+            button {
+                font-size: 0.9rem;
+                padding: 8px 15px;
+            }
+        }
+
+        /* Animation for container appearance */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
+
 <body>
-    <div id="invitations">
-        <h2>Your Invitations</h2>
-        <div id="invitationList"></div>
+    <div class="container">
+        <h1>Message Feed</h1>
+        <div id="slotContainer"></div>
+        <p id="errorMessage" class="error-message"></p>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Fetch student name from localStorage
-            const studentName = JSON.parse(localStorage.getItem('user')).name;
+        const slotContainer = document.getElementById("slotContainer");
+        const errorMessage = document.getElementById("errorMessage");
 
-            if (!studentName) {
-                alert('Student name not found in localStorage!');
-                return;
-            }
+        // Fetch user data from localStorage
+        const user = JSON.parse(localStorage.getItem("user"));
+        const studentName = user.name.replace(/\s+/g, "_"); // Replace spaces with underscores
 
-            try {
-                const response = await fetch(`https://cpr-csr-managements-1.onrender.com/fetch-invitations?student=${studentName}`);
-                const result = await response.json();
-
-                const invitationsDiv = document.getElementById('invitationList');
-                invitationsDiv.innerHTML = '';
-
-                if (result.success && result.invitations.length > 0) {
-                    result.invitations.forEach(invitation => {
-                        const div = document.createElement('div');
-                        div.className = 'invitation';
-                        div.innerHTML = `
-                            <p>Date: ${invitation.date}</p>
-                            <p>Details: ${invitation.details}</p>
-                            <p>Coach: ${invitation.admin}</p>
-                        `;
-                        invitationsDiv.appendChild(div);
-                    });
-                } else {
-                    invitationsDiv.innerHTML = '<p>No invitations found!</p>';
+        // Fetch student slots from the backend
+        fetch(`http://127.0.0.1:5000/student-slots/${studentName}`)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch slots");
                 }
-            } catch (error) {
-                console.error('Error fetching invitations:', error);
-                alert('An error occurred while fetching your invitations.');
-            }
-        });
+                return response.json();
+            })
+            .then((slots) => {
+                if (slots.length === 0) {
+                    errorMessage.textContent = "No slots found for your account.";
+                    return;
+                }
+
+                // Clear error message
+                errorMessage.textContent = "";
+
+                // Display slots
+                slots.forEach((slot) => {
+                    const startDate = new Date(slot.start_time);
+                    const date = startDate.toLocaleDateString(); // Format as date
+                    const time = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Format as time
+
+                    const slotCard = document.createElement("div");
+                    slotCard.className = "slot-card";
+
+                    // Static paragraph with dynamic date and time
+                    const staticParagraph = `
+                        Your Coach Books CPR slot with you on ${date} at ${time}.
+                        For more information, contact their respective coaches.
+                    `;
+
+                    slotCard.innerHTML = `
+                        <h3>Slot Details</h3>
+                        <p>${staticParagraph}</p>
+                    `;
+
+                    slotContainer.appendChild(slotCard);
+                });
+            })
+            .catch((error) => {
+                errorMessage.textContent = `Error: ${error.message}`;
+                console.error("Error fetching slots:", error);
+            });
     </script>
 </body>
+
 </html>

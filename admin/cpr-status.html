@@ -65,39 +65,34 @@
         }
     </style>
     <script>
-        const backendURL = "https://cpr-csr-managements-1.onrender.com";
         const fetchStudents = async () => {
             const month = document.getElementById("monthSelect").value;
-            const section = JSON.parse(localStorage.getItem("user")).section;
             const tableBody = document.getElementById("studentTableBody");
-            tableBody.innerHTML = ""; // Clear the table before fetching new data
+            tableBody.innerHTML = "";
 
             try {
-                const response = await fetch(`${backendURL}/students/${month}?section=${section}`);
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch students");
-                }
+                const response = await fetch(`https://cpr-csr-managements-1.onrender.com/students/${month}`);
+                if (!response.ok) throw new Error("Failed to fetch students");
 
                 const students = await response.json();
-
-                students.forEach((student) => {
+                students.forEach(student => {
                     const row = document.createElement("tr");
-
                     row.innerHTML = `
-                <td>${student.name}</td>
-                <td>${student.email}</td>
-                <td>${student.status}</td>
-                <td>
-                    <button 
-                        onclick="updateStatus('${student._id}', '${month}')"
-                        ${student.status === "Completed" ? "disabled" : ""}
-                    >
-                        Mark Completed
-                    </button>
-                </td>
-            `;
-
+            <td>${student.name}</td>
+            <td>${student.email}</td>
+            <td>
+              <select onchange="updateStatus('${student._id}', '${month}', this.value)">
+                <option value="Not Completed" ${student.status === 'Not Completed' ? 'selected' : ''}>Not Completed</option>
+                <option value="Ongoing" ${student.status === 'Ongoing' ? 'selected' : ''}>Ongoing</option>
+                <option value="Completed" ${student.status === 'Completed' ? 'selected' : ''}>Completed</option>
+              </select>
+            </td>
+            <td>
+              <button onclick="updateStatus('${student._id}', '${month}', document.getElementById('status-${student._id}').value)">
+                Update Status
+              </button>
+            </td>
+          `;
                     tableBody.appendChild(row);
                 });
             } catch (error) {
@@ -105,33 +100,25 @@
             }
         };
 
-
-        // Update the status of a student
-        const updateStatus = async (id, month) => {
+        const updateStatus = async (id, month, status) => {
             try {
-                await fetch(`${backendURL}/students/${month}/update`, {
+                await fetch(`https://cpr-csr-managements-1.onrender.com/students/${month}/update`, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ _id: id, status: "Completed" }),
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ _id: id, status: status }),
                 });
-
-                fetchStudents(); // Refresh the data
+                fetchStudents();
             } catch (error) {
                 console.error("Error updating status:", error);
             }
         };
-
-        // Fetch students for the default month on page load
-        document.addEventListener("DOMContentLoaded", fetchStudents);
-
     </script>
 </head>
 
 <body>
-    <header>
-        <h1>Student Management</h1>
+    <!-- Right Section: Student Management -->
+    <div class="right">
+        <h2>Student Management</h2>
         <div class="controls">
             <label for="monthSelect">Select Month:</label>
             <select id="monthSelect" onchange="fetchStudents()">
@@ -149,8 +136,6 @@
                 <option value="December">December</option>
             </select>
         </div>
-    </header>
-    <main>
         <table>
             <thead>
                 <tr>
@@ -164,7 +149,8 @@
                 <!-- Student rows will be populated here -->
             </tbody>
         </table>
-    </main>
+    </div>
+    </div>
 </body>
 
 </html>

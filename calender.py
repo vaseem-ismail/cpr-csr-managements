@@ -3,6 +3,7 @@ from flask_cors import CORS
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
+import traceback
 
 app = Flask(__name__)
 CORS(app)
@@ -51,11 +52,11 @@ def book_slot(section):
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
         return response
 
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "Invalid JSON data"}), 400
-
     try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Invalid JSON data"}), 400
+
         date_str = data.get("date")
         time_str = data.get("time")
 
@@ -100,7 +101,8 @@ def book_slot(section):
         return jsonify({"message": "Slot booked successfully"}), 201
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Error booking slot: {traceback.format_exc()}")
+        return jsonify({"error": "An error occurred while booking the slot"}), 500
 
 # Get details of a specific slot
 @app.route("/slot-details/<section>/<slot_id>", methods=["GET"])

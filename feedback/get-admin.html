@@ -46,8 +46,8 @@
         <h1>Admin Dashboard</h1>
         <h2>Add Goals for a Student</h2>
 
-        <label for="section-select">Select Section:</label>
-        <select id="section-select"></select>
+        <!-- <label for="section-select">Select Section:</label>
+        <select id="section-select"></select> -->
 
         <label for="month-select">Select Month:</label>
         <select id="month-select">
@@ -87,7 +87,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:5000';
+        const API_BASE_URL = 'https://cpr-csr-managements-1.onrender.com';
         const sectionSelect = JSON.parse(localStorage.getItem('user')).section;
         const monthSelect = document.getElementById('month-select');
         const fromInput = document.getElementById('from-input');
@@ -98,18 +98,18 @@
         const problemSolvingGoal = document.getElementById('problem-solving-goal');
         const submitGoalsBtn = document.getElementById('submit-goals-btn');
 
-        // Populate months in dropdown
-        function populateMonths() {
-            const currentDate = new Date();
-            for (let i = 0; i < 12; i++) {
-                const month = new Date(currentDate.getFullYear(), i).toISOString().slice(0, 7);
-                const option = document.createElement('option');
-                option.value = month;
-                option.textContent = month;
-                monthSelect.appendChild(option);
-            }
-            monthSelect.value = new Date().toISOString().slice(0, 7); // Set default to current month
-        }
+        // // Populate months in dropdown
+        // function populateMonths() {
+        //     const currentDate = new Date();
+        //     for (let i = 0; i < 12; i++) {
+        //         const month = new Date(currentDate.getFullYear(), i).toISOString().slice(0, 7);
+        //         const option = document.createElement('option');
+        //         option.value = month;
+        //         option.textContent = month;
+        //         monthSelect.appendChild(option);
+        //     }
+        //     monthSelect.value = new Date().toISOString().slice(0, 7); // Set default to current month
+        // }
 
         // Fetch all available sections from the backend
         async function fetchSections() {
@@ -192,7 +192,7 @@
         // Initialize page
         document.addEventListener('DOMContentLoaded', () => {
             fetchSections();
-            populateMonths();
+            // populateMonths();
         });
     </script>
 </body>

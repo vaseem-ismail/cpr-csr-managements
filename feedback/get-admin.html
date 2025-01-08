@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        label, select, input, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Dashboard</h1>
+        <h2>Add Goals for a Student</h2>
+
+        <label for="section-select">Select Section:</label>
+        <select id="section-select"></select>
+
+        <label for="month-select">Select Month:</label>
+        <select id="month-select">
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+        </select>
+
+        <label for="from-input">From (Admin Name):</label>
+        <input type="text" id="from-input" placeholder="Enter your name (Admin)" />
+
+        <label for="to-input">To (Student Name):</label>
+        <input type="text" id="to-input" placeholder="Enter the student's name" />
+
+        <label for="english-goal">English Goal:</label>
+        <input type="text" id="english-goal" placeholder="Enter English goal" />
+
+        <label for="life-skills-goal">Life Skills Goal:</label>
+        <input type="text" id="life-skills-goal" placeholder="Enter Life Skills goal" />
+
+        <label for="tech-goal">Tech Goal:</label>
+        <input type="text" id="tech-goal" placeholder="Enter Tech goal" />
+
+        <label for="problem-solving-goal">Problem Solving Goal:</label>
+        <input type="text" id="problem-solving-goal" placeholder="Enter Problem Solving goal" />
+
+        <button id="submit-goals-btn">Submit Goals</button>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+        const sectionSelect = JSON.parse(localStorage.getItem('user')).section;
+        const monthSelect = document.getElementById('month-select');
+        const fromInput = document.getElementById('from-input');
+        const toInput = document.getElementById('to-input');
+        const englishGoal = document.getElementById('english-goal');
+        const lifeSkillsGoal = document.getElementById('life-skills-goal');
+        const techGoal = document.getElementById('tech-goal');
+        const problemSolvingGoal = document.getElementById('problem-solving-goal');
+        const submitGoalsBtn = document.getElementById('submit-goals-btn');
+
+        // Populate months in dropdown
+        function populateMonths() {
+            const currentDate = new Date();
+            for (let i = 0; i < 12; i++) {
+                const month = new Date(currentDate.getFullYear(), i).toISOString().slice(0, 7);
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                monthSelect.appendChild(option);
+            }
+            monthSelect.value = new Date().toISOString().slice(0, 7); // Set default to current month
+        }
+
+        // Fetch all available sections from the backend
+        async function fetchSections() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/sections`);
+                const data = await response.json();
+                sectionSelect.innerHTML = '';
+                data.sections.forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section.replace('track_goals_', '');
+                    option.textContent = section.replace('track_goals_', '');
+                    sectionSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching sections:', error);
+            }
+        }
+
+        // Submit goals to the backend
+        async function submitGoals() {
+            const section = sectionSelect;
+            const month = monthSelect.value;
+            const from = fromInput.value.trim();
+            const to = toInput.value.trim();
+            const english = englishGoal.value.trim();
+            const lifeSkills = lifeSkillsGoal.value.trim();
+            const tech = techGoal.value.trim();
+            const problemSolving = problemSolvingGoal.value.trim();
+
+            if (!section || !month || !from || !to || !english || !lifeSkills || !tech || !problemSolving) {
+                alert('Please fill out all fields.');
+                return;
+            }
+
+            const goals = [
+                { label: 'English', goal: english },
+                { label: 'Life Skills', goal: lifeSkills },
+                { label: 'Tech', goal: tech },
+                { label: 'Problem Solving', goal: problemSolving },
+            ];
+
+            const payload = {
+                section,
+                month,
+                from,
+                to,
+                goals,
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/add-goals`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                if (response.ok) {
+                    alert('Goals added successfully!');
+                    // Clear inputs
+                    fromInput.value = '';
+                    toInput.value = '';
+                    englishGoal.value = '';
+                    lifeSkillsGoal.value = '';
+                    techGoal.value = '';
+                    problemSolvingGoal.value = '';
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Error adding goals.');
+                }
+            } catch (error) {
+                console.error('Error submitting goals:', error);
+            }
+        }
+
+        // Attach event listeners
+        submitGoalsBtn.addEventListener('click', submitGoals);
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchSections();
+            populateMonths();
+        });
+    </script>
+</body>
+</html>

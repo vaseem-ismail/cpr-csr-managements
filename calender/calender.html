@@ -260,7 +260,7 @@
                 dayDiv.addEventListener("click", () => openBookingForm(dayDiv.dataset.date));
             }
 
-            fetch(`https://cpr-csr-managements.onrender.com/get-events-${section}`)
+            fetch(`https://cpr-csr-managements-1.onrender.com/get-events-${section}`)
                 .then(res => res.json())
                 .then(events => {
                     events.forEach(event => {
@@ -309,7 +309,7 @@
                 section,
             };
 
-            fetch(`https://cpr-csr-managements.onrender.com/book-slot-${section}`, {
+            fetch(`https://cpr-csr-managements-1.onrender.com/book-slot-${section}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -329,7 +329,7 @@
         }
 
         function openBookingDetails(slotId) {
-            fetch(`https://cpr-csr-managements.onrender.com/slot-details/${section}/${slotId}`)
+            fetch(`https://cpr-csr-managements-1.onrender.com/slot-details/${section}/${slotId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.admin && data.student && data.start_time) {
@@ -354,7 +354,7 @@
         }
 
         function deleteSlot(slotId) {
-            fetch(`https://cpr-csr-managements.onrender.com/delete-slot/${section}/${slotId}`, { method: "DELETE" })
+            fetch(`https://cpr-csr-managements-1.onrender.com/delete-slot/${section}/${slotId}`, { method: "DELETE" })
                 .then(res => res.json())
                 .then(data => {
                     alert(data.message || "Slot deleted successfully.");

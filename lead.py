@@ -353,11 +353,11 @@ def get_feedback_by_email(email):
         collection_name = email.replace('.', '_').replace('@', '_')
 
         # Check if the collection exists
-        if collection_name not in db.list_collection_names():
+        if collection_name not in sectiondb.list_collection_names():
             return jsonify({"error": f"No feedback found for {email}"}), 404
 
         # Retrieve feedback documents from the collection
-        feedback_collection = db[collection_name]
+        feedback_collection = sectiondb[collection_name]
         feedbacks = list(feedback_collection.find({}, {"_id": 0}))
 
         return jsonify({"feedbacks": feedbacks}), 200

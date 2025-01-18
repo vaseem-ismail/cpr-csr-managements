@@ -130,8 +130,7 @@
         const studentName = user.name.replace(/\s+/g, "_"); // Replace spaces with underscores
 
         // Fetch student slots from the backend
-        // fetch(`https://cpr-csr-managements-1.onrender.com/student-slots/${studentName}`)
-        fetch(`http://127.0.0.1:5000/student-slots/${studentName}`)
+        fetch(`https://cpr-csr-managements-1.onrender.com/student-slots/${studentName}`)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error("Failed to fetch slots");

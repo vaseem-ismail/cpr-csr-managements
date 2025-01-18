@@ -19,6 +19,74 @@
             overflow-x: hidden;
         }
 
+        h2 {
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+
+        select,
+        button {
+            padding: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #scoresContainer {
+            margin-top: 20px;
+        }
+
+        /* Subject-specific tables */
+        .subjectTable {
+            margin-bottom: 30px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .subjectTable th,
+        .subjectTable td {
+            border: 1px solid #ddd;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .subjectTable th {
+            background-color: #343a40;
+            color: white;
+        }
+
+        .subjectTable tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .subjectTable tbody tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .subjectHeader {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #007BFF;
+        }
+
         /* Headers */
         h1,
         h2 {
@@ -360,9 +428,9 @@
         const contentDiv = document.getElementById('content');
 
         if (role === 'Admin') {
-            // Admin UI to add scores
+            // Admin UI to display scores
             contentDiv.innerHTML = `
-        <h2>Admin: Add Student Scores</h2>
+        <h2>Admin: Add and View Student Scores</h2>
         <form id="adminForm">
             <label for="studentEmail">Student Email:</label>
             <input type="email" id="studentEmail" placeholder="Enter student's email" required>
@@ -387,9 +455,32 @@
 
             <button type="submit">Submit Scores</button>
         </form>
-        <div id="adminMessage"></div>
+        
+        <div style="margin-top: 20px;">
+            <label for="selectMonth">Select Month:</label>
+            <select id="selectMonth">
+                <option value="January">January</option>
+                <option value="February">February</option>
+                <option value="March">March</option>
+                <option value="April">April</option>
+                <option value="May">May</option>
+                <option value="June">June</option>
+                <option value="July">July</option>
+                <option value="August">August</option>
+                <option value="September">September</option>
+                <option value="October">October</option>
+                <option value="November">November</option>
+                <option value="December">December</option>
+            </select>
+            <button id="viewScoresButton">View Scores</button>
+        </div>
+        
+        <div id="scoresTableContainer" style="margin-top: 20px; max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+            <!-- Scrollable table will be inserted here -->
+        </div>
     `;
 
+            // Handle form submission
             document.getElementById('adminForm').addEventListener('submit', async (event) => {
                 event.preventDefault();
 
@@ -417,10 +508,63 @@
                 });
 
                 const result = await response.json();
-                document.getElementById('adminMessage').innerText = result.message || result.error;
+                alert(result.message || result.error);
+            });
+
+            // Handle view scores
+            document.getElementById('viewScoresButton').addEventListener('click', async () => {
+                const selectedMonth = document.getElementById('selectMonth').value;
+
+                const response = await fetch(`https://cpr-csr-managements-1.onrender.com/get_scores_by_month?section=${section}&month=${selectedMonth}`);
+                const result = await response.json();
+
+                const container = document.getElementById('scoresTableContainer');
+                if (result.error) {
+                    container.innerHTML = `<p style="color: red;">${result.error}</p>`;
+                } else if (result.message) {
+                    container.innerHTML = `<p>${result.message}</p>`;
+                } else {
+                    const scores = result.scores;
+
+                    // Create a scrollable table to display scores
+                    let tableHTML = `
+                <table border="1" style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <th>Email</th>
+                        <th>English</th>
+                        <th>Life Skills</th>
+                        <th>Tech</th>
+                        <th>Problem Solving</th>
+                        <th>Self-Learning</th>
+                        <th>Behaviour</th>
+                        <th>Month</th>
+                        <th>Timestamp</th>
+                    </tr>
+            `;
+
+                    scores.forEach((score) => {
+                        tableHTML += `
+                    <tr>
+                        <td>${score.email}</td>
+                        <td>${score.scores[0]}</td>
+                        <td>${score.scores[1]}</td>
+                        <td>${score.scores[2]}</td>
+                        <td>${score.scores[3]}</td>
+                        <td>${score.scores[4]}</td>
+                        <td>${score.scores[5]}</td>
+                        <td>${score.month}</td>
+                        <td>${new Date(score.timestamp).toLocaleString()}</td>
+                    </tr>
+                `;
+                    });
+
+                    tableHTML += `</table>`;
+                    container.innerHTML = tableHTML;
+                }
             });
         }
-        else if (role === 'Lead') {
+
+        if (role === 'Lead') {
             // Lead UI to fetch student scores dynamically by section
             contentDiv.innerHTML = `
         <h2>Lead: View Scores</h2>
@@ -449,10 +593,10 @@
         </select>
 
         <button id="fetchButton">Fetch Scores</button>
-        <div id="scoresTable"></div>
+        <div id="scoresContainer"></div>
     `;
 
-            document.getElementById('fetchButton').addEventListener('click', () => {
+            document.getElementById('fetchButton').addEventListener('click', async () => {
                 const section = document.getElementById('sectionSelect').value;
                 const month = document.getElementById('monthSelect').value;
 
@@ -460,37 +604,63 @@
                     ? `https://cpr-csr-managements-1.onrender.com/get_section_scores?section=${section}&month=${month}`
                     : `https://cpr-csr-managements-1.onrender.com/get_section_scores?section=${section}`;
 
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        const scoresDiv = document.getElementById('scoresTable');
-                        if (data.scores) {
-                            const table = `
-                        <table>
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    const container = document.getElementById('scoresContainer');
+                    container.innerHTML = '';
+
+                    if (data.scores) {
+                        const subjects = [
+                            'English',
+                            'Life Skills',
+                            'Tech',
+                            'Problem Solving',
+                            'Self-Learning',
+                            'Behaviour',
+                        ];
+
+                        // Loop through each subject and create a table
+                        subjects.forEach((subject, index) => {
+                            const subjectScores = data.scores.map(score => ({
+                                email: score.email,
+                                value: score.scores[index],
+                                month: score.month,
+                            }));
+
+                            // Generate a table for the subject
+                            const subjectTable = `
+                        <div class="subjectHeader">${subject}</div>
+                        <table class="subjectTable">
                             <thead>
-                                <tr><th>Student Email</th><th>Scores</th><th>Month</th></tr>
+                                <tr>
+                                    <th>Student Email</th>
+                                    <th>${subject} Score</th>
+                                    <th>Month</th>
+                                </tr>
                             </thead>
                             <tbody>
-                                ${data.scores.map(student => `
+                                ${subjectScores.map(student => `
                                     <tr>
                                         <td>${student.email}</td>
-                                        <td>${student.scores.join(', ')}</td>
+                                        <td>${student.value}</td>
                                         <td>${student.month}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     `;
-                            scoresDiv.innerHTML = table;
-                        } else {
-                            scoresDiv.innerHTML = `<p>${data.message}</p>`;
-                        }
-                    })
-                    .catch(err => {
-                        document.getElementById('scoresTable').innerHTML = `<p>Error fetching data: ${err.message}</p>`;
-                    });
+                            container.innerHTML += subjectTable;
+                        });
+                    } else {
+                        container.innerHTML = `<p>${data.message}</p>`;
+                    }
+                } catch (err) {
+                    document.getElementById('scoresContainer').innerHTML = `<p>Error fetching data: ${err.message}</p>`;
+                }
             });
         }
+
         else if (role === 'Student') {
             // Student UI to view their scores as a bar chart
             fetch(`https://cpr-csr-managements-1.onrender.com/get_student_scores?email=${email}&section=${section}`)

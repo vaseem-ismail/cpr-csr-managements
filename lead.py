@@ -201,6 +201,23 @@ def get_student_scores():
 
     return jsonify({"message": "Scores not available"}), 200
 
+@app.route('/get_scores_by_month', methods=['GET'])
+def get_scores_by_month():
+    section = request.args.get('section')  # Get the section (specific to the coach)
+    month = request.args.get('month')  # Get the selected month
+
+    if not section or not month:
+        return jsonify({"error": "Section and month are required."}), 400
+
+    # Fetch scores from the respective collection based on section and month
+    collection = scoredb[f"Section_{section}"]
+    scores = list(collection.find({"month": month}, {"_id": 0}))  # Exclude `_id` for cleaner output
+
+    if not scores:
+        return jsonify({"message": f"No scores found for section {section} in {month}"}), 404
+
+    return jsonify({"scores": scores}), 200
+
 @app.route('/fetch-cpr-invitations', methods=['GET'])
 def fetch_cpr_invitations():
     student_name = request.args.get('student')

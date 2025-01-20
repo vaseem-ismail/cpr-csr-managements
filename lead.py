@@ -112,19 +112,33 @@ def serialize_student(student):
     return student
 
 
-
 @app.route('/students/<month>', methods=['GET'])
 def fetch_students_by_month(month):
     section = request.args.get('section')  # Get 'section' from query parameters
     if section:
-        students = list(db[month].find({"section": section}))  # Filter by section
+        # Fetch students and preserve insertion order (or any other desired order)
+        students = list(db[month].find({"section": section}).sort("_id", 1))  # Sort by insertion order (_id)
     else:
-        students = list(db[month].find())  # Return all students if no section is provided
+        students = list(db[month].find().sort("_id", 1))  # Sort by insertion order
 
     # Serialize each student to make the _id field JSON serializable
     serialized_students = [serialize_student(student) for student in students]
     
     return jsonify(serialized_students), 200
+
+
+# @app.route('/students/<month>', methods=['GET'])
+# def fetch_students_by_month(month):
+#     section = request.args.get('section')  # Get 'section' from query parameters
+#     if section:
+#         students = list(db[month].find({"section": section}))  # Filter by section
+#     else:
+#         students = list(db[month].find())  # Return all students if no section is provided
+
+#     # Serialize each student to make the _id field JSON serializable
+#     serialized_students = [serialize_student(student) for student in students]
+    
+#     return jsonify(serialized_students), 200
 
 @app.route('/students/<month>/update', methods=['POST'])
 def update_monthly_status(month):

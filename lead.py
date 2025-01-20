@@ -117,7 +117,7 @@ def fetch_students_by_month(month):
     section = request.args.get('section')  # Get 'section' from query parameters
     if section:
         # Fetch students and preserve insertion order (or any other desired order)
-        students = list(db[month].find({"section": section}).sort("_id", 1))  # Sort by insertion order (_id)
+        students = list(db[month].find({"section": section}).sort("name", 1))  # Sort by insertion order (_id)
     else:
         students = list(db[month].find().sort("_id", 1))  # Sort by insertion order
 

@@ -6,6 +6,9 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Enable CORS for cross-origin requests
 
+#students
+#admin
+
 # MongoDB Configuration
 client = MongoClient("mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/")
 db = client["student_booking"]  # Database name

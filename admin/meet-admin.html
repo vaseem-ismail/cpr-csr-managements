@@ -215,7 +215,7 @@
             event.preventDefault();
 
             const bookingData = {
-                section: document.getElementById("selectedSection").value,
+                section: JSON.parse(localStorage.getItem("user")).section,
                 date: document.getElementById("selectedDate").value,
                 time: document.getElementById("selectedSlot").value,
                 student_id: document.getElementById("studentId").value

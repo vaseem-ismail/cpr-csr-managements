@@ -16,9 +16,9 @@ client = MongoClient("mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mon
 db = client["student_booking"]  # Database name
 bookings_collection = db["bookings"]  # Collection for storing bookings
 
-SectionA = ["canvas9787839798@gmail.com", "canvas9787839798@gmail.com"]
-SectionB = ["canvas9787839798@gmail.com", "canvas9787839798@gmail.com"]
-SectionC = ["canvas9787839798@gmail.com", "canvas9787839798@gmail.com"]
+SectionA = ["madasamimadasami2002@gmail.com", "canvas9787839798@gmail.com"]
+SectionB = ["madasamy.asokan@fssa.freshworks.com", "canvas9787839798@gmail.com"]
+SectionC = ["mohamed.ismail@fssa.freshworks.com", "canvas9787839798@gmail.com"]
 
 # SMTP Configuration
 SMTP_SERVER = "smtp.gmail.com"  # Change to your SMTP provider
@@ -172,7 +172,9 @@ def book_slot():
         send_email(admin_emails, subject, message)
 
         # Send confirmation to the student
-        send_email([student_id], "Booking Confirmed", f"Dear {student_id},\nYour slot is confirmed on {date} at {time}.\nSection: {section}")
+        subject1 = "Booking Confirmed"
+        message1 = f"Dear {student_id},\nYour slot is confirmed on {date} at {time}.\nSection: {section}"
+        send_email([student_id],subject1 , message1)
 
         # Fetch updated slots
         updated_slot_doc = bookings_collection.find_one({"section": section, "date": date})

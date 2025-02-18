@@ -1,0 +1,527 @@
+<!-- Fixed -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Score Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Include the general styles */
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .content {
+            margin: 20px;
+        }
+        
+        h2 {
+            color: #333;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .left,
+        .right {
+            flex: 1;
+        }
+        /* Form Container Styles */
+        
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-container label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-container input,
+        .form-container select,
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .form-container button {
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        
+        .form-container button:hover {
+            background-color: #45a049;
+        }
+        /* Table for displaying student data */
+        
+        .scores-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .table-container {
+            margin-top: 20px;
+        }
+        
+        .table-container th,
+        .table-container td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        .table-container th {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .table-container td {
+            background-color: #f9f9f9;
+        }
+        
+        .table-container tr:nth-child(even) td {
+            background-color: #f1f1f1;
+        }
+        
+        .table-container td .score {
+            font-weight: bold;
+            color: #4caf50;
+        }
+        
+        .scores-table th,
+        .scores-table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        .scores-table th {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .scores-table td {
+            background-color: #f9f9f9;
+        }
+        
+        .scores-table tr:nth-child(even) td {
+            background-color: #f1f1f1;
+        }
+        
+        .scores-table td .score {
+            font-weight: bold;
+            color: #4caf50;
+        }
+        /* Message style */
+        
+        .message {
+            color: #ff6f61;
+            font-weight: bold;
+            text-align: center;
+        }
+        /* Spinner for loading state */
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading img {
+            width: 50px;
+            height: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content" id="content"></div>
+
+    <script>
+        // Fetching User Role from localStorage
+        const user = JSON.parse(localStorage.getItem("user"));
+        const role = user.role.toLowerCase();
+        const section = user.section;
+        const email = user.email;
+
+        const contentDiv = document.getElementById("content");
+
+        // Function to render tables
+        function renderTable(data, container, headers) {
+            let tableHTML = `<table class="subjectTable"><thead><tr>${headers
+          .map((h) => `<th>${h}</th>`)
+          .join("")}</tr></thead><tbody>`;
+        data.forEach((row) => {
+          tableHTML += `<tr>${row
+            .map((value) => `<td>${value}</td>`)
+            .join("")}</tr>`;
+        });
+        tableHTML += "</tbody></table>";
+        container.innerHTML = tableHTML;
+      }
+
+      // Function to fetch data
+      async function fetchData(url, method = "GET", body = null) {
+        try {
+          const options = {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: body ? JSON.stringify(body) : null,
+          };
+          const response = await fetch(url, options);
+          return await response.json();
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          return { error: "Failed to fetch data." };
+        }
+      }
+
+      // Check role and render content accordingly
+      if (role === "student") {
+        contentDiv.innerHTML = `
+                <h2>Student: View Your Scores (Graphical View)</h2>
+                <form id="viewScoresForm" class="form-container">
+                    <label for="selectMonth">Select Month:</label>
+                    <select id="selectStudentMonth">
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                    <button type="submit">View Scores</button>
+                </form>
+                <div id="chartContainer" class="chart-container">
+                    <canvas id="scoresChart"></canvas>
+                </div>
+            `;
+
+        // Handle form submission to view scores
+        document
+          .getElementById("viewScoresForm")
+          .addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const selectedStudentMonth =
+              document.getElementById("selectStudentMonth").value;
+
+            // Fetch student data from the backend
+            const result = await fetchData(
+              `https://cpr-csr-managements-1-ve5s.onrender.com/get_student_scores?email=${email}&section=${section}&month=${selectedStudentMonth}`
+            );
+            console.log(result);
+            if (result.scores) {
+              const scores = result.scores;
+              // Set up chart labels and data
+              const labels = [
+                "English",
+                "Life Skills",
+                "Tech",
+                "Problem Solving",
+                "Self-Learning",
+                "Behaviour",
+              ];
+              const data = scores;
+
+              // Create the chart
+              const ctx = document
+                .getElementById("scoresChart")
+                .getContext("2d");
+              const chart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                  labels: labels,
+                  datasets: [
+                    {
+                      label: `Scores for ${selectedStudentMonth}`,
+                      data: data,
+                      backgroundColor: "rgba(75, 192, 192, 0.2)",
+                      borderColor: "rgba(75, 192, 192, 1)",
+                      borderWidth: 1,
+                    },
+                  ],
+                },
+                options: {
+                  responsive: true,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                    },
+                  },
+                },
+              });
+            } else {
+              document.getElementById(
+                "chartContainer"
+              ).innerHTML = `<p class="message">No scores found for this month.</p>`;
+            }
+          });
+      } else if (role === "admin") {
+        contentDiv.innerHTML = `
+            <div class="container">
+
+                <div class="left">
+                <h2>Admin: Add Scores for a Student</h2>
+                <form id="adminForm" class="form-container">
+                    <label for="studentEmail">Student Email:</label>
+                    <input type="email" id="studentEmail" placeholder="Enter student's email" required>
+                    
+                    <label for="selectMonth">Select Month:</label>
+                    <select id="selectMonth" required>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+
+                    <label for="englishScore">English:</label>
+                    <input type="number" id="englishScore" placeholder="Enter score for English" min="0" max="100" required>
+
+                    <label for="lifeSkillsScore">Life Skills:</label>
+                    <input type="number" id="lifeSkillsScore" placeholder="Enter score for Life Skills" min="0" max="100" required>
+
+                    <label for="techScore">Tech:</label>
+                    <input type="number" id="techScore" placeholder="Enter score for Tech" min="0" max="100" required>
+
+                    <label for="problemSolvingScore">Problem Solving:</label>
+                    <input type="number" id="problemSolvingScore" placeholder="Enter score for Problem Solving" min="0" max="100" required>
+
+                    <label for="selfLearningScore">Self-Learning:</label>
+                    <input type="number" id="selfLearningScore" placeholder="Enter score for Self-Learning" min="0" max="100" required>
+
+                    <label for="behaviourScore">Behaviour:</label>
+                    <input type="number" id="behaviourScore" placeholder="Enter score for Behaviour" min="0" max="100" required>
+
+                    <button type="submit">Submit Scores</button>
+                </form>
+
+                </div>
+
+                <div class="right">
+
+                <h2>Admin: View All Student Scores</h2>
+                <form id="viewAllScoresForm" class="form-container">
+        
+
+                    <label for="selectMonth">Select Month:</label>
+                    <select id="selectAdminMonth">  
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+
+                    <button type="submit">View Scores</button>
+                </form>
+                <div id="scoresTableContainer" class="table-container"></div>
+                </div>
+                </div>
+            `;
+
+        // Handle form submission for viewing scores in a section and month
+        document
+          .getElementById("viewAllScoresForm")
+          .addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const selectedSection = JSON.parse(
+              localStorage.getItem("user")
+            ).section;
+            const selectedAdminMonth =
+              document.getElementById("selectAdminMonth").value;
+            const result = await fetchData(
+              `https://cpr-csr-managements-1-ve5s.onrender.com/get_scores_by_month?section=${selectedSection}&month=${selectedAdminMonth}`
+            );
+
+            if (result.scores) {
+              renderTable(
+                result.scores.map((score) => [
+                  score.email,
+                  ...score.scores,
+                  score.month,
+                  new Date(score.timestamp).toLocaleString(),
+                ]),
+                document.getElementById("scoresTableContainer"),
+                [
+                  "Email",
+                  "English",
+                  "Life Skills",
+                  "Tech",
+                  "Problem Solving",
+                  "Self-Learning",
+                  "Behaviour",
+                  "Month",
+                  "Timestamp",
+                ]
+              );
+            } else {
+              document.getElementById(
+                "scoresTableContainer"
+              ).innerHTML = `<p class="message">No scores found for this section in this month.</p>`;
+            }
+          });
+
+        // Handle form submission for adding scores
+        document
+          .getElementById("adminForm")
+          .addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const studentEmail = document.getElementById("studentEmail").value;
+            const selectedMonth = document.getElementById("selectMonth").value;
+            const scores = [
+              parseInt(document.getElementById("englishScore").value, 10),
+              parseInt(document.getElementById("lifeSkillsScore").value, 10),
+              parseInt(document.getElementById("techScore").value, 10),
+              parseInt(
+                document.getElementById("problemSolvingScore").value,
+                10
+              ),
+              parseInt(document.getElementById("selfLearningScore").value, 10),
+              parseInt(document.getElementById("behaviourScore").value, 10),
+            ];
+
+            const result = await fetchData(
+              "https://cpr-csr-managements-1-ve5s.onrender.com/add_scores",
+              "POST",
+              { email: studentEmail, scores, section, month: selectedMonth }
+            );
+            alert(result.message || result.error);
+          });
+      } else if (role === "lead") {
+        contentDiv.innerHTML = `
+                <h2>Lead: View All Student Scores</h2>
+                <div class="form-container">
+                    <label for="selectSection">Select Section:</label>
+                    <select id="selectSection">
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                        <option value="C">Section C</option>
+                    </select>
+                    <label for="selectMonth">Select Month:</label>
+                    <select id="selectLeadMonth">
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                    <button id="viewScoresBtn">View Scores</button>
+                </div>
+
+                <div class="loading" id="loading">
+                    <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading...">
+                </div>
+
+                <div id="scoresTable"></div>
+            `;
+
+        // Handle form submission to view scores
+        document
+          .getElementById("viewScoresBtn")
+          .addEventListener("click", async () => {
+            const section = document.getElementById("selectSection").value;
+            const selectedLeadMonth =
+              document.getElementById("selectLeadMonth").value;
+
+            // Show loading state
+            document.getElementById("loading").style.display = "block";
+
+            // Fetch the scores from the backend
+            const result = await fetchData(
+              `https://cpr-csr-managements-1-ve5s.onrender.com/get_scores_by_month?section=${section}&month=${selectedLeadMonth}`
+            );
+            document.getElementById("loading").style.display = "none"; // Hide loading state
+
+            if (result.scores && result.scores.length > 0) {
+              let tableHTML = `
+                        <table class="scores-table">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>English</th>
+                                    <th>Life Skills</th>
+                                    <th>Tech</th>
+                                    <th>Problem Solving</th>
+                                    <th>Self-Learning</th>
+                                    <th>Behaviour</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+              // Loop through the students' data and fill the table
+              result.scores.forEach((student) => {
+                tableHTML += `
+                            <tr>
+                                <td>${student.email}</td>
+                                <td class="score">${student.scores[0]}</td>
+                                <td class="score">${student.scores[1]}</td>
+                                <td class="score">${student.scores[2]}</td>
+                                <td class="score">${student.scores[3]}</td>
+                                <td class="score">${student.scores[4]}</td>
+                                <td class="score">${student.scores[5]}</td>
+                            </tr>
+                        `;
+              });
+              tableHTML += `</tbody></table>`;
+              document.getElementById("scoresTable").innerHTML = tableHTML;
+            } else {
+              document.getElementById(
+                "scoresTable"
+              ).innerHTML = `<p class="message">No scores found for this section and month.</p>`;
+            }
+          });
+      }
+    </script>
+</body>
+
+</html>

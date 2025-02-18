@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes Submission</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            text-align: center;
+        }
+        
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 5px;
+        }
+        
+        button:hover {
+            background-color: #218838;
+        }
+        
+        .message {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Submit Your Notes</h2>
+        <input type="text" id="name" placeholder="Enter Name" required>
+        <input type="email" id="email" placeholder="Enter Email" required>
+        <textarea id="notes" placeholder="Enter Notes" rows="4" required></textarea>
+        <button onclick="submitNotes()">Submit</button>
+        <p id="message" class="message"></p>
+    </div>
+
+    <script>
+        function submitNotes() {
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const notes = document.getElementById("notes").value.trim();
+            const messageEl = document.getElementById("message");
+
+            if (!name || !email || !notes) {
+                messageEl.style.color = "red";
+                messageEl.textContent = "All fields are required!";
+                return;
+            }
+
+            fetch(`http://127.0.0.1:5002/get-notes-admin-${name}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email,
+                        Notes: notes
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        messageEl.style.color = "green";
+                        messageEl.textContent = data.message;
+                    } else {
+                        messageEl.style.color = "red";
+                        messageEl.textContent = data.error || "Something went wrong.";
+                    }
+                })
+                .catch(error => {
+                    messageEl.style.color = "red";
+                    messageEl.textContent = "Failed to connect to the server.";
+                });
+        }
+    </script>
+</body>
+
+</html>

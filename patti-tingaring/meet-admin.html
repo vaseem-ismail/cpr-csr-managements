@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Booking System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        
+        h1,
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .calendar-date {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+        
+        .calendar-date.booked {
+            background-color: #f8d7da;
+            color: #721c24;
+            cursor: not-allowed;
+        }
+        
+        .calendar-date.available {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .slot {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .slot.booked {
+            background-color: #f8d7da;
+            color: #721c24;
+            cursor: not-allowed;
+        }
+        
+        .slot.available {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button.delete {
+            background-color: #ff4d4d;
+        }
+        
+        button:disabled {
+            background-color: gray;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Meetup Slot Booking</h1>
+        <h2>Select a Section</h2>
+        <select id="sectionSelect" disabled>
+            <option value="A">Section A</option>
+            <option value="B">Section B</option>
+        </select>
+
+        <h2 id="sectionHeader">Calendar for Section A</h2>
+        <div id="calendar" class="calendar"></div>
+
+        <div id="slots-container" class="hidden">
+            <h2>Available Slots</h2>
+            <div id="slots" class="slots"></div>
+        </div>
+
+        <div id="booking-container" class="hidden">
+            <h2>Confirm Booking</h2>
+            <form id="bookingForm">
+                <input type="hidden" id="selectedDate">
+                <input type="hidden" id="selectedSlot">
+                <input type="hidden" id="selectedSection">
+                <label for="studentId">Enter Your Student ID:</label>
+                <input type="text" id="studentId" required>
+                <button type="submit">Book Slot</button>
+            </form>
+        </div>
+
+        <div id="admin-container" class="hidden">
+            <h2>Booked Slots (Admin View)</h2>
+            <div id="booked-slots"></div>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = "https://cpr-csr-managements-meets-kca5.onrender.com"; // Adjust if backend is hosted elsewhere
+
+        const sectionSelect = JSON.parse(localStorage.getItem("user")).section;
+        const sectionHeader = document.getElementById("sectionHeader");
+        const calendarElement = document.getElementById("calendar");
+        const slotsContainer = document.getElementById("slots-container");
+        const slotsElement = document.getElementById("slots");
+        const bookingContainer = document.getElementById("booking-container");
+        const bookingForm = document.getElementById("bookingForm");
+        const adminContainer = document.getElementById("admin-container");
+
+        // Fetch calendar data based on section
+        function fetchCalendar(section) {
+            sectionHeader.textContent = `Calendar for Section ${section}`;
+            fetch(`${apiUrl}/calendar/${section}`)
+                .then(response => response.json())
+                .then(data => {
+                    calendarElement.innerHTML = ""; // Clear previous calendar
+                    data.calendar.forEach(date => {
+                        const dateDiv = document.createElement("div");
+
+                        dateDiv.className = `calendar-date ${date.fully_booked ? "booked" : "available"}`;
+                        dateDiv.innerText = new Date(date.date).toDateString();
+                        dateDiv.dataset.date = date.date;
+
+                        dateDiv.addEventListener("click", () => {
+                            if (!date.fully_booked) {
+                                fetchSlots(section, date.date);
+                            }
+                            adminView(section, date.date); // Show booked slots for admin
+                        });
+
+                        calendarElement.appendChild(dateDiv);
+                    });
+                })
+                .catch(error => console.error("Failed to load calendar:", error));
+        }
+
+        // Fetch available slots for a selected date and section
+        function fetchSlots(section, date) {
+            fetch(`${apiUrl}/slots/${section}/${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    slotsElement.innerHTML = ""; // Clear previous slots
+                    data.slots.forEach(slot => {
+                        const slotDiv = document.createElement("div");
+                        slotDiv.className = `slot ${slot.booked ? "booked" : "available"}`;
+                        slotDiv.innerText = slot.time;
+
+                        if (!slot.booked) {
+                            slotDiv.addEventListener("click", () => showBookingForm(section, date, slot.time));
+                        }
+
+                        slotsElement.appendChild(slotDiv);
+                    });
+                    slotsContainer.classList.remove("hidden");
+                })
+                .catch(error => console.error("Failed to load slots:", error));
+        }
+
+        // Show the booking form
+        function showBookingForm(section, date, slot) {
+            document.getElementById("selectedDate").value = date;
+            document.getElementById("selectedSlot").value = slot;
+            document.getElementById("selectedSection").value = section;
+            bookingContainer.classList.remove("hidden");
+        }
+
+        // Submit booking form
+        bookingForm.addEventListener("submit", event => {
+            event.preventDefault();
+
+            const bookingData = {
+                section: JSON.parse(localStorage.getItem("user")).section,
+                date: document.getElementById("selectedDate").value,
+                time: document.getElementById("selectedSlot").value,
+                student_id: document.getElementById("studentId").value
+            };
+
+            fetch(`${apiUrl}/book_slot`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(bookingData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || "Slot booked successfully!");
+                    window.onload;
+                    fetchSlots(bookingData.section, bookingData.date);
+                })
+                .catch(error => console.error("Failed to book slot:", error));
+        });
+
+        // Fetch booked slots for a specific section and date (Admin View)
+        function adminView(section, date) {
+            fetch(`${apiUrl}/booked_slots/${section}/${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    const bookedSlotsContainer = document.getElementById("booked-slots");
+                    bookedSlotsContainer.innerHTML = ""; // Clear previous data
+
+                    if (data.booked_slots && data.booked_slots.length > 0) {
+                        data.booked_slots.forEach(slot => {
+                            const slotDiv = document.createElement("div");
+                            slotDiv.classList.add("slot", "booked");
+                            slotDiv.innerHTML = `
+                                <span>Time: ${slot.time}, Student ID: ${slot.student_id}</span>
+                                <button class="delete" onclick="deleteSlot('${section}', '${date}', '${slot.time}')">Delete</button>
+                            `;
+                            bookedSlotsContainer.appendChild(slotDiv);
+                        });
+                    } else {
+                        bookedSlotsContainer.innerText = "No booked slots for this date.";
+                    }
+
+                    adminContainer.classList.remove("hidden");
+                })
+                .catch(error => console.error("Failed to load booked slots:", error));
+        }
+
+        // Delete a booked slot
+        function deleteSlot(section, date, time) {
+            fetch(`${apiUrl}/delete_slot`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        section,
+                        date,
+                        time
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || "Slot deleted successfully!");
+                    adminView(section, date);
+                })
+                .catch(error => console.error("Failed to delete slot:", error));
+        }
+
+        // Initialize with the default section
+        //sectionSelect.addEventListener("change", event => {
+        //            fetchCalendar(event.target.value);
+        //});
+
+        // Load the calendar when the page loads
+        fetchCalendar(sectionSelect);
+    </script>
+</body>
+
+</html>

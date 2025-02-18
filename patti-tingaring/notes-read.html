@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Notes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        
+        .container {
+            margin: 20px;
+        }
+        
+        .note {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Admin Notes</h1>
+        <label for="name">Enter Admin Name:</label>
+        <input type="text" id="name" placeholder="Admin Name">
+        <button onclick="fetchNotes()">Get Notes</button>
+
+        <div id="notesContainer"></div>
+    </div>
+
+    <script>
+        function fetchNotes() {
+            const name = document.getElementById('name').value;
+
+            if (!name) {
+                alert('Please enter an admin name.');
+                return;
+            }
+
+            fetch(`http://127.0.0.1:5002/get-all-notes-admin/${name}`, {
+                    method: 'GET',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const notesContainer = document.getElementById('notesContainer');
+                    notesContainer.innerHTML = ''; // Clear previous results
+
+                    if (data.error) {
+                        notesContainer.innerHTML = `<p class="error">${data.error}</p>`;
+                    } else {
+                        data.data.forEach(note => {
+                            const noteElement = document.createElement('div');
+                            noteElement.classList.add('note');
+                            noteElement.innerHTML = `
+                            <h3>${note.date}</h3>
+                            <p>${note.Notes}</p>
+                        `;
+                            notesContainer.appendChild(noteElement);
+                        });
+                    }
+                })
+                .catch(error => {
+                    const notesContainer = document.getElementById('notesContainer');
+                    notesContainer.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                });
+        }
+    </script>
+</body>
+
+</html>

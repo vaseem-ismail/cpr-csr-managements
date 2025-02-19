@@ -177,6 +177,38 @@
             color: #555;
         }
         
+        #details-colour {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            /* Optional: Light background */
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            /* Optional: Soft shadow */
+        }
+        
+        .parent {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        
+        .child {
+            width: 10px;
+            height: 10px;
+            border: 1px solid black;
+        }
+        
+        .text {
+            font-size: 14px;
+            color: #333;
+            /* Dark text for readability */
+            margin: 0;
+        }
+        
         @media (max-width: 768px) {
             .calendar {
                 grid-template-columns: repeat(3, 1fr);
@@ -203,6 +235,21 @@
         <button id="nextMonth">Next Month</button>
     </div>
     <div class="calendar" id="calendar"></div>
+
+    <div id="details-colour">
+        <div class="parent">
+            <div class="child" style="background-color: red;width: 10px; height: 10px;"></div>
+            <p class="text">Indicates Fully Booked</p>
+        </div>
+        <div class="parent">
+            <div class="child" style="background-color: white;width: 10px; height: 10px;"></div>
+            <p class="text">Indicates Available slots</p>
+        </div>
+        <div class="parent">
+            <div class="child" style="background-color: yellow;width: 10px; height: 10px;"></div>
+            <p class="text">Indicates Partially Booked</p>
+        </div>
+    </div>
 
     <div id="booking-form" class="booking-form">
         <h2>Book Slot</h2>
@@ -279,7 +326,7 @@
             const firstDayOfMonth = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            fetch(`http://127.0.0.1:5000/get-events-${section}`)
+            fetch(`https://cpr-csr-managements-1-ve5s.onrender.com/get-events-${section}`)
                 .then(res => res.json())
                 .then(events => {
                     const bookedSlots = {};
@@ -321,7 +368,7 @@
             slotContainer.innerHTML = "";
             document.body.appendChild(slotContainer);
 
-            fetch(`http://127.0.0.1:5000/get-events-${section}`)
+            fetch(`https://cpr-csr-managements-1-ve5s.onrender.com/get-events-${section}`)
                 .then(res => res.json())
                 .then(events => {
                     const bookedSlots = {};
@@ -373,7 +420,7 @@
                 admin: user.name,
                 section
             };
-            fetch(`http://127.0.0.1:5000/book-slot-${section}/${date}`, {
+            fetch(`https://cpr-csr-managements-1-ve5s.onrender.com/book-slot-${section}/${date}`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -405,7 +452,7 @@
         }
 
         function deleteSlot(slot) {
-            fetch(`http://127.0.0.1:5000/delete-slot/${section}/${slot}`, {
+            fetch(`https://cpr-csr-managements-1-ve5s.onrender.com/delete-slot/${section}/${slot}`, {
                     method: "DELETE"
                 })
                 .then(res => res.json())

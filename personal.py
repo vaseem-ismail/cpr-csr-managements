@@ -11,7 +11,7 @@ notes_lead_db = MONGO_URI["Notes-lead"]
 
 
 @app.route("/get-notes-admin-<name>",methods = ["POST"])
-def get_notes(name):
+def get_admin_notes(name):
     data = request.get_json()
     #Topic =request.get_json()
     Notes = data.get("Notes")
@@ -33,7 +33,7 @@ def get_notes(name):
     
     
 @app.route("/get-all-notes-admin/<name>",methods = ["GET"])
-def allnotes(name):
+def all_admin_notes(name):
     #data = request.get_json()
     notes_collection_admin = notes_admin_db[name]
     takedata = notes_collection_admin.find({},{"_id":0})
@@ -47,7 +47,7 @@ def allnotes(name):
     
     
 @app.route("/get-notes-lead-<name>",methods = ["POST"])
-def get_notes(name):
+def get_lead_notes(name):
     data = request.get_json()
     #Topic =request.get_json()
     Notes = data.get("Notes")
@@ -69,7 +69,7 @@ def get_notes(name):
     
     
 @app.route("/get-all-notes-lead/<name>",methods = ["GET"])
-def allnotes(name):
+def all_lead_notes(name):
     #data = request.get_json()
     notes_lead_admin = notes_lead_db[name]
     takedata = notes_lead_admin.find({},{"_id":0})

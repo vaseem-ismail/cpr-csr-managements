@@ -225,47 +225,47 @@
                 </div>
             `;
 
-        // Handle form submission to view scores
-        document
-          .getElementById("viewScoresForm")
-          .addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const selectedStudentMonth =
-              document.getElementById("selectStudentMonth").value;
+            let chartInstance = null; // Store chart instance
 
-            // Fetch student data from the backend
-            const result = await fetchData(
-              `https://cpr-csr-managements-1-ve5s.onrender.com/get_student_scores?email=${email}&section=${section}&month=${selectedStudentMonth}`
-            );
-            console.log(result);
-            if (result.scores) {
-              const scores = result.scores;
-              // Set up chart labels and data
-              const labels = [
-                "English",
-                "Life Skills",
-                "Tech",
-                "Problem Solving",
-                "Self-Learning",
-                "Behaviour",
-              ];
-              const data = scores;
-
-              document.getElementById("scoresChart").style.width = "100px";  // Reduce width
-              document.getElementById("scoresChart").style.height = "100px"; // Reduce height
-
-              // Create the chart
-              const ctx = document
-                .getElementById("scoresChart")
-                .getContext("2d");
-                const chart = new Chart(ctx, {
+            document
+              .getElementById("viewScoresForm")
+              .addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const selectedStudentMonth =
+                  document.getElementById("selectStudentMonth").value;
+            
+                // Fetch student data from the backend
+                const result = await fetchData(
+                  `https://cpr-csr-managements-1-ve5s.onrender.com/get_student_scores?email=${email}&section=${section}&month=${selectedStudentMonth}`
+                );
+            
+                console.log(result);
+                if (result.scores) {
+                  const scores = result.scores;
+                  const labels = [
+                    "English",
+                    "Life Skills",
+                    "Tech",
+                    "Problem Solving",
+                    "Self-Learning",
+                    "Behaviour",
+                  ];
+                  document.getElementById("scoresChart").style.width = "100px";  // Reduce width
+                  document.getElementById("scoresChart").style.height = "550px"; // Reduce height
+                  // **Destroy the previous chart before creating a new one**
+                  if (chartInstance) {
+                    chartInstance.destroy();
+                  }
+            
+                  const ctx = document.getElementById("scoresChart").getContext("2d");
+                  chartInstance = new Chart(ctx, {
                     type: "bar",
                     data: {
                       labels: labels,
                       datasets: [
                         {
                           label: `Scores for ${selectedStudentMonth}`,
-                          data: data,
+                          data: scores,
                           backgroundColor: "rgba(75, 192, 192, 0.2)",
                           borderColor: "rgba(75, 192, 192, 1)",
                           borderWidth: 1,
@@ -274,23 +274,23 @@
                     },
                     options: {
                       responsive: true,
-                      maintainAspectRatio: false, // Ensures manual resizing works
+                      maintainAspectRatio: false,
                       scales: {
                         y: {
                           beginAtZero: true,
-                          min: 1, // Set minimum to 1
-                          max: 100, // Set maximum to 100
+                          min: 0,
+                          max: 100,
                         },
                       },
                     },
                   });
-                  
-            } else {
-              document.getElementById(
-                "chartContainer"
-              ).innerHTML = `<p class="message">No scores found for this month.</p>`;
-            }
-          });
+                } else {
+                  document.getElementById(
+                    "chartContainer"
+                  ).innerHTML = `<p class="message">No scores found for this month.</p>`;
+                }
+              });
+            
       } else if (role === "admin") {
         contentDiv.innerHTML = `
             <div class="container">

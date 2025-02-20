@@ -13,6 +13,7 @@ notes_lead_db = MONGO_URI["Notes-lead"]
 @app.route("/get-notes-admin-<name>",methods = ["POST"])
 def get_admin_notes(name):
     data = request.get_json()
+    Title = data.get("topic")
     #Topic =request.get_json()
     Notes = data.get("Notes")
     email = data.get("email")
@@ -20,11 +21,11 @@ def get_admin_notes(name):
     date = datetime.now(timezone.utc).date().isoformat()  # "YYYY-MM-DD"
     time = datetime.now(timezone.utc).time().strftime("%H:%M:%S")  # "HH:MM:SS"
     
-    if not email or not Notes:
+    if not email or not Notes or not Title:
         return jsonify({"error":"email or Notes are not defined properly, Please Check and try again"}),404
     notes_collection_admin = notes_admin_db[name]
     print(notes_collection_admin)
-    insert = notes_collection_admin.insert_one({"name":name,"date":date,"time":time,"email":email,"Notes":Notes})
+    insert = notes_collection_admin.insert_one({"name":name,"date":date,"time":time,"email":email,"Title":Title,"Notes":Notes})
     
     if(insert):
         return jsonify({"message":"the data has been saved succesfully"}),201
@@ -49,6 +50,7 @@ def all_admin_notes(name):
 @app.route("/get-notes-lead-<name>",methods = ["POST"])
 def get_lead_notes(name):
     data = request.get_json()
+    Title = data.get("topic")
     #Topic =request.get_json()
     Notes = data.get("Notes")
     email = data.get("email")
@@ -56,11 +58,11 @@ def get_lead_notes(name):
     date = datetime.now(timezone.utc).date().isoformat()  # "YYYY-MM-DD"
     time = datetime.now(timezone.utc).time().strftime("%H:%M:%S")  # "HH:MM:SS"
     
-    if not email or not Notes:
+    if not email or not Notes or not Title :
         return jsonify({"error":"email or Notes are not defined properly, Please Check and try again"}),404
     notes_lead_admin = notes_admin_db[name]
     print(notes_lead_admin)
-    insert = notes_lead_admin.insert_one({"name":name,"date":date,"time":time,"email":email,"Notes":Notes})
+    insert = notes_lead_admin.insert_one({"name":name,"date":date,"time":time,"email":email,"Notes":Notes,"Title":Title})
     
     if(insert):
         return jsonify({"message":"the data has been saved succesfully"}),201

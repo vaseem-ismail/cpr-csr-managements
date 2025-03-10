@@ -5,6 +5,8 @@ from pymongo import MongoClient
 from flask_cors import CORS
 from datetime import datetime
 import re
+from motor.motor_asyncio import AsyncIOMotorClient
+import asyncio
 
 # Flask app setup
 app = Flask(__name__)
@@ -28,7 +30,7 @@ users_collection = db['Users']
 #admin.html
 
 @app.route('/register', methods=['POST'])
-def register():
+async def register():
     data = request.get_json()
     name = data.get('name')
     email = data.get('email')
@@ -55,7 +57,7 @@ def register():
     return jsonify({'message': 'User registered successfully', 'user_id': str(user_id)}), 201
 
 @app.route('/change-password', methods=['POST'])
-def change_password():
+async def change_password():
     try:
         data = request.get_json()
         email = data.get('email')
@@ -88,7 +90,7 @@ def change_password():
 
 
 @app.route('/login', methods=['POST'])
-def login():
+async def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
@@ -110,7 +112,7 @@ def login():
     }), 200
     
 @app.route('/delete_user', methods=['DELETE'])
-def delete_user():
+async def delete_user():
     data = request.get_json()
     email = data.get('email')
 
@@ -132,7 +134,7 @@ def delete_user():
 # Get User Details
 @app.route('/profile', methods=['GET'])
 @jwt_required()
-def profile():
+async def profile():
     
     user_id = get_jwt_identity()
     user = users_collection.find_one({'_id': user_id})
@@ -147,7 +149,7 @@ def profile():
 
 #FeedBack System
 @app.route('/submit-feedback', methods=['POST'])
-def submit_feedback():
+async def submit_feedback():
     try:
         # Parse JSON from the request
         feedback_data = request.json
@@ -189,7 +191,7 @@ def submit_feedback():
 
 
 @app.route('/get-feedback/<sender_email>', methods=['GET'])
-def get_feedback(sender_email):
+async def get_feedback(sender_email):
     try:
         # Sanitize the sender's email for collection name
         collection_name = sender_email.replace('.', '_').replace('@', '_')
@@ -208,7 +210,7 @@ def get_feedback(sender_email):
         return jsonify({"error": "An internal error occurred"}), 500
     
 @app.route('/get-feedbacks', methods=['POST'])
-def get_feedbacks():
+async def get_feedbacks():
     try:
         data = request.get_json()
         email = data.get('email')
@@ -228,7 +230,7 @@ def get_feedbacks():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-
+#await 
 
 # Main entry point
 if __name__ == '__main__':

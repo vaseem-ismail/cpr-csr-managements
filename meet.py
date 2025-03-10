@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from flask_cors import CORS
 import smtplib
 from email.mime.text import MIMEText
+from motor.motor_asyncio import AsyncIOMotorClient
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for cross-origin requests
@@ -12,7 +13,7 @@ CORS(app)  # Enable CORS for cross-origin requests
 #admin
 
 # MongoDB Configuration
-client = MongoClient("mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/")
+client = AsyncIOMotorClient("mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/")
 db = client["student_booking"]  # Database name
 bookings_collection = db["bookings"]  # Collection for storing bookings
 
@@ -27,7 +28,7 @@ EMAIL_SENDER = "cpr.bot.ai@gmail.com"
 EMAIL_PASSWORD = "blty ihcf xbwg ocgb"  # Use environment variables for security
 
 
-def generate_default_slots():
+async def generate_default_slots():
     """Generate default time slots between 2 PM and 5 PM (6 slots, 30 minutes each)."""
     start_time = datetime.strptime("14:00", "%H:%M")
     end_time = datetime.strptime("17:00", "%H:%M")
@@ -44,7 +45,7 @@ def generate_default_slots():
 
 
 @app.route("/calendar/<section>", methods=["GET"])
-def get_calendar(section):
+async def get_calendar(section):
     """Return all upcoming dates for the current month with booking status."""
     calendar = []
     
@@ -86,7 +87,7 @@ def get_calendar(section):
 
     return jsonify({"calendar": calendar}), 200
 
-def generate_slots(date):
+async def generate_slots(date):
     """Generate time slots between 2 PM and 5 PM (6 slots, 30 minutes each)."""
     base_time = datetime.strptime(f"{date} 14:00", "%Y-%m-%d %H:%M")
     return [
@@ -95,7 +96,7 @@ def generate_slots(date):
     ]
 
 @app.route("/slots/<section>/<date>", methods=["GET"])
-def get_slots(section, date):
+async def get_slots(section, date):
     """Fetch slots for a given section and date."""
     slot_doc = bookings_collection.find_one({"section": section, "date": date})
 
@@ -113,7 +114,7 @@ def get_slots(section, date):
     return jsonify({"slots": slot_doc["slots"]}), 200
 
 
-def send_email(to_emails, subject, message):
+async def send_email(to_emails, subject, message):
     """Send an email notification."""
     try:
         msg = MIMEText(message)
@@ -130,17 +131,18 @@ def send_email(to_emails, subject, message):
         print(f"Failed to send email: {e}")
 
 @app.route("/book_slot", methods=["POST"])
-def book_slot():
+async def book_slot():
     """Book a slot and send an email notification."""
     data = request.json
     section = data.get("section")
     date = data.get("date")
     time = data.get("time")
+    email = data.get("email")
     student_id = data.get("student_id")
     # student_email = data.get("student_email")
     # student_name = data.get("student_name")
 
-    if not section or not date or not time or not student_id or not student_id:
+    if not section or not date or not time or not student_id or not student_id or not email:
         return jsonify({"error": "Missing required fields"}), 400
 
     # Update the slot to mark it as booked
@@ -149,6 +151,7 @@ def book_slot():
         {
             "$set": {
                 "slots.$.booked": True,
+                "booked-email":email, 
                 "slots.$.student_id": student_id
             }
         }
@@ -185,7 +188,7 @@ def book_slot():
 
 
 @app.route("/booked_slots/<section>/<date>", methods=["GET"])
-def get_booked_slots(section, date):
+async def get_booked_slots(section, date):
     """Fetch booked slots with student IDs for a specific section and date."""
     slot_doc = bookings_collection.find_one({"section": section, "date": date})
     
@@ -201,13 +204,13 @@ def get_booked_slots(section, date):
     return jsonify({"booked_slots": booked_slots}), 200
 
 @app.route("/fully_booked_dates/<section>", methods=["GET"])
-def get_fully_booked_dates(section):
+async def get_fully_booked_dates(section):
     """Fetch fully booked dates for a section."""
     dates = bookings_collection.find({"section": section, "fully_booked": True}, {"date": 1})
     return jsonify({"fully_booked_dates": [doc["date"] for doc in dates]}), 200
 
 @app.route("/delete_slot", methods=["POST"])
-def delete_slot():
+async def delete_slot():
     data = request.json
     section = data["section"]
     date = format_date(data["date"])
@@ -222,7 +225,7 @@ def delete_slot():
         return jsonify({"message": "Slot deleted successfully!"})
     return jsonify({"message": "Failed to delete slot. It might not be booked."}), 400
 
-def format_date(date_str):
+async def format_date(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y-%m-%d")
 
 

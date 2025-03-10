@@ -7,6 +7,7 @@ from dateutil import parser
 import traceback
 import smtplib
 from email.mime.text import MIMEText
+from motor.motor_asyncio import AsyncIOMotorClient
 
 app = Flask(__name__)
 
@@ -14,7 +15,7 @@ app = Flask(__name__)
 CORS(app)
 
 # MongoDB connection
-client = MongoClient("mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/")
+client = AsyncIOMotorClient("mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/")
 calenderdb = client["Slot-Book"]
 db = client['CPR-Status']
 scoredb = client["Scores"]
@@ -51,7 +52,7 @@ SectionC = ["mohamed.ismail@fssa.freshworks.com", "canvas9787839798@gmail.com"]
 #Student CPR finshed Update 
 #Student database Status Fetching
 @app.route('/api/students', methods=['GET'])
-def fetch_students():
+async def fetch_students():
     section = request.args.get('section')  # Get section from query params
     month = request.args.get('month')  # Get month for status
     if not section or not month:
@@ -77,7 +78,7 @@ def fetch_students():
     return jsonify(students_list)
 
 @app.route('/api/update_status', methods=['POST'])
-def update_student_status():
+async def update_student_status():
     data = request.json
     section = data.get('section')
     month = data.get('month')
@@ -109,7 +110,7 @@ def update_student_status():
 
 
 
-def serialize_student(student):
+async def serialize_student(student):
     """
     Converts MongoDB document to a JSON serializable format,
     especially for the _id field.
@@ -119,7 +120,7 @@ def serialize_student(student):
 
 
 @app.route('/students/<month>', methods=['GET'])
-def fetch_students_by_month(month):
+async def fetch_students_by_month(month):
     section = request.args.get('section')  # Get 'section' from query parameters
     if section:
         # Fetch students and preserve insertion order (or any other desired order)
@@ -147,7 +148,7 @@ def fetch_students_by_month(month):
 #     return jsonify(serialized_students), 200
 
 @app.route('/students/<month>/update', methods=['POST'])
-def update_monthly_status(month):
+async def update_monthly_status(month):
     data = request.json
     student_id = data.get('_id')
     new_status = data.get('status')
@@ -162,7 +163,7 @@ def update_monthly_status(month):
 #Admin Score update for Students
 # Admin adds scores for a student
 @app.route('/add_scores', methods=['POST'])
-def add_scores():
+async def add_scores():
     data = request.json
     section = data.get('section')
     email = data.get('email')
@@ -186,7 +187,7 @@ def add_scores():
 
 # Lead fetches all scores in a section
 @app.route('/get_section_scores', methods=['GET'])
-def get_section_scores():
+async def get_section_scores():
     section = request.args.get('section')
     month = request.args.get('month')  # Optional parameter
 
@@ -207,7 +208,7 @@ def get_section_scores():
 
 # Student fetches their own scores
 @app.route('/get_student_scores', methods=['GET'])
-def get_student_scores():
+async def get_student_scores():
     email = request.args.get('email')
     section = request.args.get('section')
     month = request.args.get('month')
@@ -225,7 +226,7 @@ def get_student_scores():
     return jsonify({"message": "Scores not available"}), 200
 
 @app.route('/get_scores_by_month', methods=['GET'])
-def get_scores_by_month():
+async def get_scores_by_month():
     section = request.args.get('section')  # Get the section (specific to the coach)
     month = request.args.get('month')  # Get the selected month
 
@@ -242,7 +243,7 @@ def get_scores_by_month():
     return jsonify({"scores": scores}), 200
 
 @app.route('/fetch-cpr-invitations', methods=['GET'])
-def fetch_cpr_invitations():
+async def fetch_cpr_invitations():
     student_name = request.args.get('student')
     student_section = request.args.get('section')
 
@@ -267,7 +268,7 @@ def fetch_cpr_invitations():
         return jsonify({"success": False, "message": "Internal server error."}), 500
     
 # Helper to serialize MongoDB ObjectId
-def serialize_event(event):
+async def serialize_event(event):
     """Convert MongoDB ObjectId and datetime fields to strings."""
     event["_id"] = str(event["_id"])
     if "start_time" in event:
@@ -277,12 +278,12 @@ def serialize_event(event):
     return event
 
 # Helper to check if a collection exists
-def section_exists(section):
+async def section_exists(section):
     return section in calenderdb.list_collection_names()
 
 # Get events for a specific section
 @app.route("/get-events-<section>", methods=["GET"])
-def get_events(section):
+async def get_events(section):
     try:
         if not section_exists(section):
             return jsonify({"error": f"Section '{section}' not found"}), 404
@@ -296,7 +297,7 @@ def get_events(section):
         return jsonify({"error": str(e)}), 500
 
 
-def send_email(to_emails, subject, message):
+async def send_email(to_emails, subject, message):
     """Send an email notification."""
     try:
         msg = MIMEText(message)
@@ -315,7 +316,7 @@ def send_email(to_emails, subject, message):
     
 # Book a slot
 @app.route('/book-slot-<section>/<date>', methods=['POST', 'OPTIONS'])
-def book_slot(section,date):
+async def book_slot(section,date):
     if request.method == 'OPTIONS':
         response = jsonify({"message": "CORS preflight successful"})
         response.headers.add('Access-Control-Allow-Origin', '*')
@@ -407,7 +408,7 @@ def book_slot(section,date):
 
 # Get details of a specific slot
 @app.route("/slot-details/<section>/<date>", methods=["GET"])
-def slot_details(section, date):
+async def slot_details(section, date):
     try:
         if not section_exists(section):
             return jsonify({"error": f"Section '{section}' not found"}), 404
@@ -428,7 +429,7 @@ def slot_details(section, date):
 
 # Delete a specific slot
 @app.route("/delete-slot/<section>/<slot>", methods=["DELETE"])
-def delete_slot(section, slot):
+async def delete_slot(section, slot):
     # slotfix = str(slot);
     # print(slotfix)
     try:
@@ -454,7 +455,7 @@ def delete_slot(section, slot):
 
 # Get slots for a specific student
 @app.route('/student-slots/<string:student_name>', methods=['GET'])
-def get_student_slots(student_name):
+async def get_student_slots(student_name):
     try:
         formatted_name = student_name.replace(" ", "_")
         if not section_exists(formatted_name):
@@ -469,16 +470,16 @@ def get_student_slots(student_name):
 
 # Error Handlers
 @app.errorhandler(404)
-def not_found_error(e):
+async def not_found_error(e):
     return jsonify({"error": "Resource not found"}), 404
 
 @app.errorhandler(500)
-def internal_server_error(e):
+async def internal_server_error(e):
     return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route('/get-students/<section>', methods=['GET'])
-def get_students(section):
+async def get_students(section):
     """
     Fetch a list of students' emails for a given section.
     """
@@ -499,7 +500,7 @@ def get_students(section):
         return jsonify({"error": str(e)}), 500
 
 @app.route('/get-feedback/<email>', methods=['GET'])
-def get_feedback_by_email(email):
+async def get_feedback_by_email(email):
     """
     Fetch feedback for a given student's email.
     """
@@ -521,7 +522,7 @@ def get_feedback_by_email(email):
         return jsonify({"error": str(e)}), 500
     
 @app.route('/add-goals', methods=['POST'])
-def add_multiple_goals():
+async def add_multiple_goals():
     """
     Admin adds a single message containing goals for multiple subjects for a specific student.
     """
@@ -554,7 +555,7 @@ def add_multiple_goals():
 
 
 @app.route('/student-goals', methods=['GET'])
-def get_student_goals():
+async def get_student_goals():
     """
     Fetch all goals for a specific student by name, section, and month.
     """

@@ -7,9 +7,12 @@ app = Flask(__name__)
 CORS(app)
 
 # MongoDB connection
-client = MongoClient("mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/")  # Replace with your connection string
+client = MongoClient("mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/")
 scoredb = client["Scores"]
 
+# score1.html
+
+#Admin Score update for Students
 # Admin adds scores for a student
 @app.route('/add_scores', methods=['POST'])
 def add_scores():
@@ -60,12 +63,15 @@ def get_section_scores():
 def get_student_scores():
     email = request.args.get('email')
     section = request.args.get('section')
+    month = request.args.get('month')
 
-    if not email or not section:
-        return jsonify({"error": "Email and section are required"}), 400
+    if not email or not section or not month:
+        return jsonify({"error": "Email and section and month are required"}), 400
+    
+    print(email,month,section)
 
     collection = scoredb[f"Section_{section}"]
-    student_scores = collection.find_one({"email": email}, {"_id": 0, "scores": 1})
+    student_scores = collection.find_one({"email": email,"month":month}, {"_id": 0, "scores": 1})
     if student_scores:
         return jsonify({"scores": student_scores["scores"]}), 200
 
@@ -73,8 +79,8 @@ def get_student_scores():
 
 @app.route('/get_scores_by_month', methods=['GET'])
 def get_scores_by_month():
-    section = request.args.get('section')  # Get the section (specific to the coach)
-    month = request.args.get('month')  # Get the selected month
+    section = request.args.get('section')  
+    month = request.args.get('month')  
 
     if not section or not month:
         return jsonify({"error": "Section and month are required."}), 400

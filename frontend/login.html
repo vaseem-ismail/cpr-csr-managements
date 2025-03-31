@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer"
+    />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .header {
+            width: 100%;
+            background-color: #343a40;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0;
+        }
+        
+        .header img {
+            height: 50px;
+        }
+        
+        .login-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            margin-top: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #343a40;
+        }
+        
+        #loginEmail {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid black;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .login-container button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .login-container button:hover {
+            background-color: #0056b3;
+        }
+        
+        #loginMessage {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+        /* Loading Overlay */
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+        }
+        
+        .loading-overlay.visible {
+            visibility: visible;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .fa-eye {
+            margin-right: 10px;
+        }
+        
+        .password {
+            width: 90%;
+            height: 20px;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 5px;
+            border: 1px solid black;
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px 0px;
+        }
+        
+        .password input {
+            border: none;
+            /* Remove input border */
+            outline: none;
+            /* Remove focus outline */
+            padding: 10px;
+            flex: 1;
+            /* Allow input to take remaining space */
+            font-size: 16px;
+        }
+        
+        #loginForm button {
+            width: 95%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <img src="../assests/images/logo_freshwork1.png" alt="Logo" draggable="false" />
+    </div>
+
+    <div class="login-container">
+        <h2>LOGIN</h2>
+        <p id="loginMessage"></p>
+        <form id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Enter your email" required />
+
+            <span class="password">
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="Enter your password"
+            required
+          />
+          <i class="fa-solid fa-eye" id="showpswdlogin"></i>
+        </span>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const loginForm = document.getElementById("loginForm");
+            const loginMessage = document.getElementById("loginMessage");
+            const loadingOverlay = document.getElementById("loadingOverlay");
+            const API_URL = "https://cpr-csr-managements-7e67.onrender.com";
+
+            loginForm.addEventListener("submit", async(e) => {
+                e.preventDefault();
+
+                const email = document.getElementById("loginEmail").value;
+                const password = document.getElementById("loginPassword").value;
+
+                // Show the loading overlay
+                loadingOverlay.classList.add("visible");
+
+                try {
+                    const response = await fetch(`${API_URL}/login`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            email,
+                            password
+                        }),
+                    });
+
+                    const data = await response.json();
+                    console.log("Response Data:", data); // Debug response
+
+                    if (response.ok) {
+                        loginMessage.style.color = "green";
+                        loginMessage.textContent = "Login successful!";
+                        localStorage.setItem("user", JSON.stringify(data));
+
+                        // Redirect based on role
+                        setTimeout(() => {
+                            if (data.role === "Student") {
+                                console.log("Navigating to Student Page");
+                                window.location.href = "./students/students.html";
+                            } else if (data.role === "Admin") {
+                                console.log("Navigating to Admin Page");
+                                window.location.href = "./admin/admin.html";
+                            } else if (data.role === "Lead") {
+                                console.log("Navigating to Lead Page");
+                                window.location.href = "./leads/lead.html";
+                            } else {
+                                alert("Unknown role. Please contact the administrator.");
+                            }
+                        }, 1000);
+                    } else {
+                        loginMessage.style.color = "red";
+                        loginMessage.textContent = data.error || "Login failed!";
+                    }
+                } catch (error) {
+                    console.error("Login error:", error);
+                    loginMessage.style.color = "red";
+                    loginMessage.textContent = "Network error. Please try again later.";
+                } finally {
+                    loadingOverlay.classList.remove("visible");
+                }
+            });
+        });
+
+        // login showpassword
+
+        //show password login
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Select the password input and eye icon elements
+            const eyeIcon = document.getElementById("showpswdlogin");
+            const passwordInput = document.getElementById("loginPassword");
+
+            // Check if both elements exist before adding the event listener
+            if (eyeIcon && passwordInput) {
+                eyeIcon.addEventListener("click", () => {
+                    if (passwordInput.type === "password") {
+                        passwordInput.type = "text";
+                        eyeIcon.classList.remove("fa-eye");
+                        eyeIcon.classList.add("fa-eye-slash");
+                    } else {
+                        passwordInput.type = "password";
+                        eyeIcon.classList.remove("fa-eye-slash");
+                        eyeIcon.classList.add("fa-eye");
+                    }
+                });
+            } else {
+                console.error(
+                    "Either the eye icon or the password input field is missing."
+                );
+            }
+        });
+    </script>
+</body>
+
+</html>

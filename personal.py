@@ -13,7 +13,7 @@ notes_lead_db = MONGO_URI["Notes-lead"]
 @app.route("/get-notes-admin-<name>",methods = ["POST"])
 def get_admin_notes(name):
     data = request.get_json()
-    Title = data.get("topic")
+    Title = data.get("Title")
     #Topic =request.get_json()
     Notes = data.get("Notes")
     email = data.get("email")
@@ -23,9 +23,9 @@ def get_admin_notes(name):
     
     if not email or not Notes or not Title:
         return jsonify({"error":"email or Notes are not defined properly, Please Check and try again"}),404
-    notes_collection_admin = notes_admin_db[name]
+    notes_collection_admin = notes_admin_db[Title]
     print(notes_collection_admin)
-    insert = notes_collection_admin.insert_one({"name":name,"date":date,"time":time,"email":email,"Title":Title,"Notes":Notes})
+    insert = notes_collection_admin.insert_one({"Topic":Title,"name":name,"date":date,"time":time,"email":email,"Title":Title,"Notes":Notes})
     
     if(insert):
         return jsonify({"message":"the data has been saved succesfully"}),201

@@ -7,10 +7,14 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)  # Allow cross-origin requests
 
+
+
+# track-goals-admin.html
+
 # MongoDB Atlas connection
 MONGO_URI = "mongodb+srv://vaseemdrive01:mohamedvaseem@cprweb.6sp6c.mongodb.net/"
 client = MongoClient(MONGO_URI)
-track_db = client["track_goals"]  # Database name
+track_db = client["track_goals"] 
 
 @app.route('/add-goals', methods=['POST'])
 def add_multiple_goals():
@@ -45,27 +49,8 @@ def add_multiple_goals():
 
 
 
-@app.route('/student-goals', methods=['GET'])
-def get_student_goals():
-    """
-    Fetch all goals for a specific student by name, section, and month.
-    """
-    student_name = request.args.get('name')
-    section = request.args.get('section')
-    month = request.args.get('month')  # Get the selected month
 
-    if not student_name or not section or not month:
-        return jsonify({"error": "Student name, section, and month are required"}), 400
 
-    collection_name = f"track_goals_{section}"
-    collection = track_db[collection_name]
-
-    goals = collection.find(
-        {"to": student_name, "month": month},
-        {"_id": 0, "from": 1, "to": 1, "goals": 1}
-    )
-
-    return jsonify({"goals": list(goals)})
 
 
 

@@ -65,7 +65,7 @@ def book_slot():
     # student_email = data.get("student_email")
     # student_name = data.get("student_name")
 
-    if not section or not date or not time or not student_id or not student_id or not email:
+    if not section or not date or not time or not student_id :
         return jsonify({"error": "Missing required fields"}), 400
 
     # Update the slot to mark it as booked

@@ -87,9 +87,8 @@ def send_email(to_emails, subject, message):
     
     
 # Book a slot
-@app.route('/book-slot-<section>/<date>', methods=['POST', 'OPTIONS'])
+@app.route('/book-slot-<section>/<date>', methods=['POST'])
 def book_slot(section, date):
-
     try:
         data = request.get_json()
         if not data:
@@ -168,7 +167,7 @@ def book_slot(section, date):
 
     except Exception as e:
         app.logger.error(f"Error booking slot: {traceback.format_exc()}")
-        return jsonify({"error": "An error occurred while booking the slot"}), 500
+        return jsonify({"error": str(e)}), 500
 
 # Get details of a specific slot
 @app.route("/slot-details/<section>/<date>", methods=["GET"])

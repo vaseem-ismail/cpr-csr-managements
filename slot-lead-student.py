@@ -88,13 +88,7 @@ def send_email(to_emails, subject, message):
     
 # Book a slot
 @app.route('/book-slot-<section>/<date>', methods=['POST', 'OPTIONS'])
-def book_slot(section,date):
-    if request.method == 'OPTIONS':
-        response = jsonify({"message": "CORS preflight successful"})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        return response
+def book_slot(section, date):
 
     try:
         data = request.get_json()
